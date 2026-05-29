@@ -1,0 +1,3 @@
+[list.subcommands.events]
+help = """List all event types (not the actual events occurrences) that are currently found in the database.\n
+Note: This report will change as different event types are synced."""

@@ -1,0 +1,38 @@
+[events.subcommands.query]
+help = """Query events (from db) by name or ID.
+Date range will always be applied. Default range is the last 7 days.
+Run the "List events" report to see unique events currently in the database."""
+
+[events.subcommands.query.options.from_date]
+flags = ["--from-date"]
+required = false
+type = "date"
+help = "From date in YYYY-MM-DD or ISO 8601 format."
+
+[events.subcommands.query.options.to_date]
+flags = ["--to-date"]
+required = false
+type = "date"
+help = "To date (inclusive) in YYYY-MM-DD or ISO 8601 format."
+
+[events.subcommands.query.options.days]
+flags = ["--days"]
+required = false
+help = "Number of days in the past (max 30, overrides from and to dates)"
+
+[events.subcommands.query.options.event_name]
+flags = ["--event-name"]
+required = false
+ui_list = "event_names"
+help = "Filter by event name"
+
+[events.subcommands.query.options.event_id]
+flags = ["--event-id"]
+required = false
+help = "Filter by ID (Overrides event_name)."
+
+[events.subcommands.query.options.json_source]
+flags = ["--json-source"]
+required = false
+action = "store_true"
+help = "Output as original JSON. Overrides JSON checkbox or --to-json CLI flag."

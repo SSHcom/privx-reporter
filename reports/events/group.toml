@@ -1,0 +1,11 @@
+[events]
+help = "Audit event reports."
+description = """\
+Report audit events by date range and event code.
+Reports are generated on event data synced to the database.
+
+Subcommands:
+  query                 Generic event query
+  role-member           Role member additions and removals
+  account               Target account additions and removals
+"""

@@ -1,0 +1,13 @@
+[connections.subcommands.details]
+help = "Get connection details by ID"
+
+[connections.subcommands.details.options.connection_id]
+flags = ["--connection-id"]
+required = true
+help = "Connection ID"
+
+[connections.subcommands.details.options.json_source]
+flags = ["--json-source"]
+required = false
+action = "store_true"
+help = "Output as original JSON. Overrides JSON checkbox or --to-json CLI flag."

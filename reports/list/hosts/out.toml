@@ -1,0 +1,16 @@
+[list.subcommands.hosts.fields]
+common_name = "true|Common Name"
+addresses = "true|Addresses"
+access_group_name = "true|Access Group Name"
+services = "false|Services"
+principals = "false|Principals"
+
+id = "false|ID"
+access_group_id = "false|Access Group ID"
+password_rotation_enabled = "false|Password Rotation Status"
+source_id = "false|Source ID"
+comment = "false|Comments"
+audit_enabled = "false|Audit Enabled"
+
+[list.subcommands.hosts.options]
+ui_display = true

@@ -1,0 +1,1 @@
+"""Network targets list report."""

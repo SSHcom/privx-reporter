@@ -1,0 +1,36 @@
+[connections.subcommands.query]
+help = """Query connections by various filters. Defaults to last 7 days if no date range is specified.\n
+Note: This report is based on real time data from PrivX.
+"""
+
+[connections.subcommands.query.options.from_date]
+flags = ["--from-date"]
+required = false
+type = "date"
+help = "From date in YYYY-MM-DD or ISO 8601 format. Defaults to 7 days ago."
+
+[connections.subcommands.query.options.to_date]
+flags = ["--to-date"]
+required = false
+type = "date"
+help = "To date (inclusive) in YYYY-MM-DD or ISO 8601 format. Defaults to today."
+
+[connections.subcommands.query.options.target_account]
+flags = ["--target-account"]
+required = false
+help = "Filter by target host account"
+
+[connections.subcommands.query.options.user_name]
+flags = ["--user-name"]
+required = false
+help = "Filter by user name (case-insensitive substring match)."
+
+[connections.subcommands.query.options.target_address]
+flags = ["--target-address"]
+required = false
+help = "Filter by target host address"
+
+[connections.subcommands.query.options.connection_type]
+flags = ["--connection-type"]
+required = false
+help = "Filter by connection type (e.g., SSH, RDP, API)"

@@ -1,0 +1,13 @@
+[list.subcommands.api-targets.fields]
+name = "true|Name"
+access_group_name = "true|Access Group Name"
+authorized_endpoints = "false|Authorized Endpoints"
+
+id = "false|ID"
+access_group_id = "false|Access Group ID"
+audit_enabled = "false|Audit Enabled"
+comment = "false|Comments"
+tls_insecure_skip_verify = "false|TLS Insecure"
+
+[list.subcommands.api-targets.options]
+ui_display = true

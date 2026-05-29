@@ -1,0 +1,30 @@
+[events.subcommands.accounts.fields]
+event_name = "true|Event Name"
+action = "true|Action"
+variant = "true|Variant"
+modified_by = "true|Modified By"
+timestamp = "true|Timestamp"
+severity = "true|Severity"
+host_name = "false|Host Name"
+principal = "true|Principal"
+role_names = "true|Role Names"
+passphrase_set = "false|Passphrase Set"
+
+message = "false|Message"
+audit_exposure = "false|Audit Exposure"
+instance_name = "false|Instance Name"
+remote_address = "false|Remote Address"
+service_name = "false|Service Name"
+ssh_privx_service = "false|SSH PrivX Service"
+version = "false|Version"
+source = "false|Modification Source"
+event_id = "false|Event ID (code)"
+session_id = "false|Session ID"
+access_group_id = "false|Access Group ID"
+host_id = "false|Host ID"
+user_id = "false|User ID"
+role_ids = "false|Role IDs"
+
+
+[events.subcommands.accounts.options]
+ui_display = false

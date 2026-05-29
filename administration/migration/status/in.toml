@@ -1,0 +1,2 @@
+[migration.subcommands.status]
+help = "Show applied and pending migrations"

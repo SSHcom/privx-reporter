@@ -1,0 +1,9 @@
+# Copy this file to config.toml when deploying to production
+
+[client]
+toolbarMode = "viewer"
+
+[server]
+runOnSave = false
+fileWatcherType = "none"
+headless = true

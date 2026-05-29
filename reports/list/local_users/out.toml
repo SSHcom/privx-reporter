@@ -1,0 +1,9 @@
+[list.subcommands.local-users.fields]
+username = "true|Username"
+full_name = "true|Full Name"
+email = "true|Email"
+
+id = "false|ID"
+
+[list.subcommands.local-users.options]
+ui_display = true

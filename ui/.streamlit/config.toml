@@ -1,0 +1,9 @@
+[server]
+runOnSave = true
+headless = true
+
+[theme.sidebar]
+backgroundColor="#072433"
+primaryColor="#072433"
+textColor="#ffffff"
+

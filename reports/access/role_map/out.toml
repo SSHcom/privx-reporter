@@ -1,0 +1,14 @@
+[access.subcommands.role-map.fields]
+role_name = "true|Role Name"
+user_name = "true|User Name"
+target_host = "true|Target Host"
+target_accounts = "true|Target Accounts"
+
+samaccountname = "false|SAM Account Name"
+windows_account = "false|Windows Account"
+unix_account = "false|Unix Account"
+role_id = "false|Role ID"
+user_id = "false|User ID"
+
+[access.subcommands.role-map.options]
+ui_display = true

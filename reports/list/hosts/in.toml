@@ -1,0 +1,2 @@
+[list.subcommands.hosts]
+help = "List all hosts"

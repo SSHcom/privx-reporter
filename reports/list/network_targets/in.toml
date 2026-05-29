@@ -1,0 +1,2 @@
+[list.subcommands.network-targets]
+help = "List all network targets"

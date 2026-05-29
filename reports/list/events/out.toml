@@ -1,0 +1,6 @@
+[list.subcommands.events.fields]
+event_id = "true|Event ID (code)"
+event_name = "true|Event Name"
+
+[list.subcommands.events.options]
+ui_display = true

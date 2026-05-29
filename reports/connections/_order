@@ -1,0 +1,5 @@
+# Subdirectory order for connection reports in the UI sidebar.
+# "query" variants are listed last.
+details
+query
+query_db

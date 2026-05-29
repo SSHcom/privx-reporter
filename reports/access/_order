@@ -1,0 +1,7 @@
+# Subdirectory order for access reports in the UI sidebar.
+# "query" is listed last because it is the most complex report.
+account
+account_restrictions
+hosts
+role_map
+query

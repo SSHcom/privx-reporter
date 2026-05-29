@@ -1,0 +1,10 @@
+[access.subcommands.account.fields]
+user_name = "true|User Name"
+role_name = "true|Role Name"
+target_host = "true|Target Host"
+target_host_common_name = "true|Host Common Name"
+target_account = "true|Target Account"
+
+role_id = "false|Role ID"
+user_id = "false|User ID"
+target_host_id = "false|Target Host ID"

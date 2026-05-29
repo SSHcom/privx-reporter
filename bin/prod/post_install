@@ -1,0 +1,72 @@
+#!/bin/bash
+set -euo pipefail
+
+expected_install_dir="/opt/reporter"
+
+if [[ -n "${REPORTER_HOME:-}" ]]; then
+  reporter_home="$(realpath "$REPORTER_HOME")"
+else
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  reporter_home="$(realpath "$script_dir/..")"
+fi
+
+if [[ "$reporter_home" != "$expected_install_dir" ]]; then
+  echo "FATAL: invalid installation directory: $reporter_home" >&2
+  echo "Expected installation directory: $expected_install_dir" >&2
+  exit 1
+fi
+
+info_file="$reporter_home/.info"
+if [[ ! -f "$info_file" ]]; then
+  echo "FATAL: missing installation metadata: $info_file" >&2
+  exit 1
+fi
+
+install_type="$(awk -F= '$1 == "install" {print $2}' "$info_file" | tail -n1)"
+if [[ -z "$install_type" ]]; then
+  echo "FATAL: install type is missing in $info_file" >&2
+  exit 1
+fi
+
+case "$install_type" in
+  standalone|distributed)
+    ;;
+  *)
+    echo "FATAL: unsupported install type in $info_file: $install_type" >&2
+    exit 1
+    ;;
+esac
+
+missing=()
+check_command() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    missing+=("$1")
+  fi
+}
+
+check_command python3
+check_command uv
+check_command git
+
+if [[ "$install_type" == "standalone" ]]; then
+  check_command docker
+fi
+
+if [[ "${#missing[@]}" -gt 0 ]]; then
+  echo "FATAL: missing required dependencies: ${missing[*]}" >&2
+  exit 1
+fi
+
+if ! python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 13) else 1)'; then
+  echo "FATAL: python3 version must be 3.13 or newer" >&2
+  exit 1
+fi
+
+if [[ "$install_type" == "standalone" ]]; then
+  if ! docker compose version >/dev/null 2>&1; then
+    echo "FATAL: docker compose is required for standalone installation" >&2
+    exit 1
+  fi
+fi
+
+echo "Post-install checks passed for $install_type installation at $reporter_home."

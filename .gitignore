@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+.mypy_cache/
+.pytest_cache
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.venv
+.ruff_cache/
+
+# UV
+.uv/
+uv.lock
+
+# IDE
+.vscode/
+.idea/
+
+# AI
+.ai/
+.claude/
+.cline/
+.clinerules/
+.codex/
+.cursor/
+.junie/
+.kilocode/
+.kiro/
+.pi/
+
+*.iml
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env-local
+.env-aws
+.env-ukm
+.env-ssh-demo
+.env-reporter.privxssh.com
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Other
+/report_out
+/.dev-pg-ssl
+/passwords-delete-me.txt
+/.coverage
+
+# AI
+/.opencode
+/.cursor
+/.pi
+/openspec
+/CLAUDE.md
+/opencode.json
+.todos/
+/gep-signals.md

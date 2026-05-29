@@ -1,0 +1,12 @@
+[roles.subcommands.query]
+help = "Query roles by various filtering"
+
+[roles.subcommands.query.options.role_name]
+flags = ["--role-name"]
+required = false
+help = "Filter by role name"
+
+[roles.subcommands.query.options.access_group_name]
+flags = ["--access-group-name"]
+required = false
+help = "Filter by access group name"

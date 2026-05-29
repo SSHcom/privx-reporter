@@ -1,0 +1,10 @@
+[connections]
+help = "Connection reports"
+description = """\
+Various connection reports.
+
+Subcommands:
+  details   Get connection details by ID
+  query     Query connections by various filters (requires a date range)
+  query-db  Query connections from sync server database by various filters (requires a date range)
+"""

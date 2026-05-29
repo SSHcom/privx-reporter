@@ -1,0 +1,2 @@
+[list.subcommands.access-groups]
+help = "List all access groups"

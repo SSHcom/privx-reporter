@@ -1,0 +1,859 @@
+[access]
+help = "Reports about user and role access to target hosts and accounts"
+description = """\
+Reports about user and role access to target hosts and accounts.
+
+Subcommands:
+  account               List who can access a specified account on a target
+  account-restrictions  List target accounts having command restrictions
+  hosts                 List all target hosts a specified user can access
+  query                 Query host access by various filters
+  role-map              List roles that can access a target host
+"""
+
+[connections]
+help = "Connection reports"
+description = """\
+Various connection reports.
+
+Subcommands:
+  details   Get connection details by ID
+  query     Query connections by various filters (requires a date range)
+  query-db  Query connections from sync server database by various filters (requires a date range)
+"""
+
+[events]
+help = "Audit event reports."
+description = """\
+Report audit events by date range and event code.
+Reports are generated on event data synced to the database.
+
+Subcommands:
+  query                 Generic event query
+  role-member           Role member additions and removals
+  account               Target account additions and removals
+"""
+
+[list]
+help = "List various PrivX entities"
+description = """\
+List various PrivX entities.
+
+Subcommands:
+  access-groups    List all access groups
+  local-users      List all local users
+  hosts            List all hosts
+  network-targets  List all network targets
+  api-targets      List all API targets
+  roles            List all roles
+  secrets          Query secrets by name or role
+  sources          PrivX user directories and host directories
+"""
+
+[roles]
+help = "Reports about roles, their members and restrictions"
+description = """\
+Reports about roles, their members and restrictions.
+
+Subcommands:
+  members       List all members of a role
+  query         Query roles by various filters
+  restrictions  List roles having contextual restrictions
+  user          List all roles assigned to a user
+"""
+
+[access.subcommands.account]
+help = "List who can access specified account on target. Provide either --target-address or --common-name to identify the host."
+
+[access.subcommands.account.options.target_address]
+flags = ["--target-address"]
+required = false
+help = "Target host address"
+
+[access.subcommands.account.options.common_name]
+flags = ["--common-name"]
+required = false
+help = "Target host common name (alternative to --target-address)"
+
+[access.subcommands.account.options.target_account]
+flags = ["--target-account"]
+required = true
+help = "Target account to check access for"
+
+[access.subcommands.account.options]
+ui_display = true
+
+[access.subcommands.account.fields]
+user_name = "true|User Name"
+role_name = "true|Role Name"
+target_host = "true|Target Host"
+target_host_common_name = "true|Host Common Name"
+target_account = "true|Target Account"
+
+role_id = "false|Role ID"
+user_id = "false|User ID"
+target_host_id = "false|Target Host ID"
+
+[access.subcommands.account-restrictions]
+help = "List target accounts having command restrictions"
+
+[access.subcommands.account-restrictions.options.target_address]
+flags = ["--target-address"]
+required = false
+help = "Target host address or hostname (optional, searches all hosts if not provided)"
+
+[access.subcommands.account-restrictions.fields]
+target_host = "true|Target Host"
+account_name = "true|Account Name"
+default_whitelist_name = "true|Default Whitelist Name"
+whitelist_names = "true|Whitelist Names"
+allow_no_match = "true|Allow No Match"
+audit_match = "true|Audit Match"
+audit_no_match = "true|Audit No Match"
+
+target_host_id = "false|Target Host ID"
+
+[access.subcommands.account-restrictions.options]
+ui_display = true
+ui_warning = """Not recommended without a "target address" filter when PrivX has many host entries."""
+
+
+[access.subcommands.hosts]
+help = """List all target hosts a specified user can access for each assigned role.
+At least one of --user-name, --user-id, or --principal is required."""
+
+[access.subcommands.hosts.options.user_name]
+flags = ["--user-name"]
+required = false
+help = """Filter by exact user full name (case-insensitive exact match).
+Examples: "Jane Doe" (matches only "Jane Doe", not "Jane Doe Admin")"""
+
+[access.subcommands.hosts.options.user_id]
+flags = ["--user-id"]
+required = false
+help = "Filter by user ID (uuid)"
+
+[access.subcommands.hosts.options.principal]
+flags = ["--principal"]
+required = false
+help = """Filter by exact principal/username (case-insensitive exact match).
+Examples: "user-1" (matches only "user-1", not "user1")"""
+
+[access.subcommands.hosts.options.directory]
+flags = ["--directory"]
+required = false
+help = """Filter results to users from a specific directory source type.
+Examples: "LOCAL", "MICROSOFTGRAPH", "LDAP" """
+
+[access.subcommands.hosts.options.to_map]
+flags = ["--to-map"]
+required = false
+action = "store_true"
+ui_hidden = true
+help = "Display output as an ASCII tree map showing User -> Role -> Host relationships. Only works with --user-id. CLI only."
+
+[access.subcommands.hosts.fields]
+user_name = "true|Username"
+principal = "true|Principal"
+source_name = "true|Source"
+role_name = "true|Role Name"
+target_host = "true|Target Host"
+target_host_name = "true|Target Host Name"
+target_accounts = "true|Target Accounts"
+
+user_id = "false|User ID"
+role_id = "false|Role ID"
+target_host_id = "false|Target Host ID"
+
+[access.subcommands.hosts.options]
+ui_display = true
+
+[access.subcommands.role-map]
+help = "List roles that can access a target host"
+
+[access.subcommands.role-map.options.target_address]
+flags = ["--target-address"]
+required = true
+help = "Target host address or hostname"
+
+[access.subcommands.role-map.fields]
+role_name = "true|Role Name"
+user_name = "true|User Name"
+target_host = "true|Target Host"
+target_accounts = "true|Target Accounts"
+
+samaccountname = "false|SAM Account Name"
+windows_account = "false|Windows Account"
+unix_account = "false|Unix Account"
+role_id = "false|Role ID"
+user_id = "false|User ID"
+
+[access.subcommands.role-map.options]
+ui_display = true
+
+[access.subcommands.query]
+help = """Query host access by various filters. At least one filter must be provided.
+Note: --user-name alone is not allowed (could fetch too many hosts). 
+If you only want to filter by user, use the "Access hosts" report instead."""
+
+[access.subcommands.query.options.target_address]
+flags = ["--target-address"]
+required = false
+help = """Filter by host address (case-sensitive substring match).
+Examples: '172.31', 'ip-172', 'prod-server'"""
+
+[access.subcommands.query.options.common_name]
+flags = ["--common-name"]
+required = false
+help = """Filter by host common name (case-sensitive substring match).
+Examples: 'DEMO-PrivXDB', 'web-server'"""
+
+[access.subcommands.query.options.target_account]
+flags = ["--target-account"]
+required = false
+help = """Filter results to only show access for a specific target account.
+Examples: 'root', 'admin', 'rocky'"""
+
+[access.subcommands.query.options.access_group_name]
+flags = ["--access-group-name"]
+required = false
+help = """Filter by access group name (case-insensitive substring match).
+Examples: 'Production', 'prod', 'Default'"""
+
+[access.subcommands.query.options.access_group_comment]
+flags = ["--access-group-comment"]
+required = false
+help = """Filter by access group comment (case-insensitive substring match).
+Examples: "production environment", "AWS EU", "staging" """
+
+[access.subcommands.query.options.service_type]
+flags = ["--service-type"]
+required = false
+help = "Filter by service type (case-insensitive exact match). Must be exact service name. Examples: SSH, RDP, VNC, HTTP"
+
+[access.subcommands.query.options.role_name]
+flags = ["--role-name"]
+required = false
+help = """Filter by exact role name (case-insensitive exact match).
+Examples: "Linux-admin" (matches only "Linux-admin", not "Azure-Linux-admins" or "demo-linux-admin")"""
+
+[access.subcommands.query.options.user_name]
+flags = ["--user-name"]
+required = false
+help = """Filter by user user name (case-insensitive substring match).
+Note: Cannot be used alone, but must be combined with at least one other filter.
+For filtering by user only, use the --access --hosts report instead."""
+
+[access.subcommands.query.options.tags]
+flags = ["--tags"]
+required = false
+help = """Filter by host tags (case-insensitive substring match).
+Note: Result will include hosts having any of the provided tasks.
+Use ',' as separator for multiple tags."""
+[access.subcommands.query.fields]
+user_name = "true|User Name"
+role_name = "true|Role Name"
+access_group_name = "true|Access Group Name"
+target_host = "true|Target Host"
+target_account = "true|Target Account"
+service_type = "true|Service Type"
+
+user_id = "false|User ID"
+role_id = "false|Role ID"
+target_host_id = "false|Target Host ID"
+host_common_name = "false|Host Common Name"
+access_group_id = "false|Access Group ID"
+access_group_comment = "false|Access Group Comment"
+access_group_default = "false|Access Group Default"
+tags = "false|Tags"
+
+[access.subcommands.query.options]
+ui_display = true
+
+[connections.subcommands.details]
+help = "Get connection details by ID"
+
+[connections.subcommands.details.options.connection_id]
+flags = ["--connection-id"]
+required = true
+help = "Connection ID"
+
+[connections.subcommands.details.options.json_source]
+flags = ["--json-source"]
+required = false
+action = "store_true"
+help = "Output as original JSON. Overrides JSON checkbox or --to-json CLI flag."
+
+[connections.subcommands.details.fields]
+user_name = "true|Username"
+target_host_address = "true|Target Address"
+target_host_account = "true|Target Account"
+created = "true|Created"
+connected = "true|Connected"
+disconnected = "true|Disconnected"
+duration = "true|Duration"
+status = "true|Status"
+type = "true|Connection Type"
+authorized_endpoints = "true|Authorized Endpoints"
+
+user_display_name = "false|User Display Name"
+user_id = "false|User ID"
+connection_id = "false|Connection ID"
+target_host_common_name = "false|Target Host Common Name"
+target_host_id = "false|Target Host ID"
+target_ips = "false|Target IPs"
+
+[connections.subcommands.details.options]
+ui_display = true
+
+[connections.subcommands.query]
+help = """Query connections by various filters. Defaults to last 7 days if no date range is specified.\n
+Note: This report is based on real time data from PrivX.
+"""
+
+[connections.subcommands.query.options.from_date]
+flags = ["--from-date"]
+required = false
+type = "date"
+help = "From date in YYYY-MM-DD or ISO 8601 format. Defaults to 7 days ago."
+
+[connections.subcommands.query.options.to_date]
+flags = ["--to-date"]
+required = false
+type = "date"
+help = "To date (inclusive) in YYYY-MM-DD or ISO 8601 format. Defaults to today."
+
+[connections.subcommands.query.options.target_account]
+flags = ["--target-account"]
+required = false
+help = "Filter by target host account"
+
+[connections.subcommands.query.options.user_name]
+flags = ["--user-name"]
+required = false
+help = "Filter by user name (case-insensitive substring match)."
+
+[connections.subcommands.query.options.target_address]
+flags = ["--target-address"]
+required = false
+help = "Filter by target host address"
+
+[connections.subcommands.query.options.connection_type]
+flags = ["--connection-type"]
+required = false
+help = "Filter by connection type (e.g., SSH, RDP, API)"
+
+[connections.subcommands.query.fields]
+user_name = "true|Username"
+target_host_address = "true|Target Address"
+target_host_account = "true|Target Account"
+created = "true|Created"
+connected = "true|Connected"
+disconnected = "true|Disconnected"
+duration = "true|Duration"
+status = "true|Status"
+type = "true|Connection Type"
+authorized_endpoints = "true|Authorized Endpoints"
+
+user_display_name = "false|User Display Name"
+user_id = "false|User ID"
+connection_id = "false|Connection ID"
+target_host_common_name = "false|Target Host Common Name"
+target_host_id = "false|Target Host ID"
+target_ips = "false|Target IPs"
+
+[connections.subcommands.query.options]
+ui_display = false
+
+[connections.subcommands.query-db]
+help = """Query connections by various filters. Defaults to last 7 days if no date range is specified.\n
+Note: This report is based on historical records from the database.
+"""
+
+[connections.subcommands.query-db.options.from_date]
+flags = ["--from-date"]
+required = true
+type = "date"
+help = "From date in YYYY-MM-DD or ISO 8601 format."
+
+[connections.subcommands.query-db.options.to_date]
+flags = ["--to-date"]
+required = true
+type = "date"
+help = "To date (inclusive) in YYYY-MM-DD or ISO 8601 format."
+
+[connections.subcommands.query-db.options.target_account]
+flags = ["--target-account"]
+required = false
+help = "Filter by target host account"
+
+[connections.subcommands.query-db.options.user_name]
+flags = ["--user-name"]
+required = false
+help = "Filter by user name (case-insensitive substring match)."
+
+[connections.subcommands.query-db.options.target_address]
+flags = ["--target-address"]
+required = false
+help = "Filter by target host address"
+
+[connections.subcommands.query-db.options.connection_type]
+flags = ["--connection-type"]
+required = false
+help = "Filter by connection type (e.g., SSH, RDP, API)"
+
+[connections.subcommands.query-db.fields]
+user_name = "true|Username"
+target_host_address = "true|Target Address"
+target_host_account = "true|Target Account"
+created = "true|Created"
+connected = "true|Connected"
+disconnected = "true|Disconnected"
+duration = "true|Duration"
+status = "true|Status"
+type = "true|Connection Type"
+authorized_endpoints = "true|Authorized Endpoints"
+
+user_display_name = "false|User Display Name"
+user_id = "false|User ID"
+connection_id = "false|Connection ID"
+target_host_common_name = "false|Target Host Common Name"
+target_host_id = "false|Target Host ID"
+target_ips = "false|Target IPs"
+
+[connections.subcommands.query-db.options]
+ui_display = false
+
+[events.subcommands.accounts]
+help = """Query account addition and removal events (from db).
+Date range will always be applied. Default range is the last 7 days.
+With --json-source, one source record may include multiple account changes."""
+
+[events.subcommands.accounts.options.from_date]
+flags = ["--from-date"]
+required = false
+type = "date"
+help = "From date in YYYY-MM-DD or ISO 8601 format."
+
+[events.subcommands.accounts.options.to_date]
+flags = ["--to-date"]
+required = false
+type = "date"
+help = "To date (inclusive) in YYYY-MM-DD or ISO 8601 format."
+
+[events.subcommands.accounts.options.days]
+flags = ["--days"]
+required = false
+help = "Number of days in the past (max 30, overrides from and to dates)"
+
+[events.subcommands.accounts.options.added]
+flags = ["--added"]
+required = false
+action = "store_true"
+help = "Show only account additions."
+
+[events.subcommands.accounts.options.removed]
+flags = ["--removed"]
+required = false
+action = "store_true"
+help = "Show only account removals."
+
+[events.subcommands.accounts.options.json_source]
+flags = ["--json-source"]
+required = false
+action = "store_true"
+help = "Output as original JSON. Overrides JSON checkbox or --to-json CLI flag."
+
+[events.subcommands.accounts.fields]
+event_name = "true|Event Name"
+action = "true|Action"
+variant = "true|Variant"
+modified_by = "true|Modified By"
+timestamp = "true|Timestamp"
+severity = "true|Severity"
+host_name = "false|Host Name"
+principal = "true|Principal"
+role_names = "true|Role Names"
+passphrase_set = "false|Passphrase Set"
+
+message = "false|Message"
+audit_exposure = "false|Audit Exposure"
+instance_name = "false|Instance Name"
+remote_address = "false|Remote Address"
+service_name = "false|Service Name"
+ssh_privx_service = "false|SSH PrivX Service"
+version = "false|Version"
+source = "false|Modification Source"
+event_id = "false|Event ID (code)"
+session_id = "false|Session ID"
+access_group_id = "false|Access Group ID"
+host_id = "false|Host ID"
+user_id = "false|User ID"
+role_ids = "false|Role IDs"
+
+
+[events.subcommands.accounts.options]
+ui_display = false
+
+[events.subcommands.role-members]
+help = """Query role member addition and removal events (from db).
+Date range will always be applied. Default range is the last 7 days."""
+
+[events.subcommands.role-members.options.from_date]
+flags = ["--from-date"]
+required = false
+type = "date"
+help = "From date in YYYY-MM-DD or ISO 8601 format."
+
+[events.subcommands.role-members.options.to_date]
+flags = ["--to-date"]
+required = false
+type = "date"
+help = "To date (inclusive) in YYYY-MM-DD or ISO 8601 format."
+
+[events.subcommands.role-members.options.days]
+flags = ["--days"]
+required = false
+help = "Number of days in the past (max 30, overrides from and to dates)"
+
+[events.subcommands.role-members.options.added]
+flags = ["--added"]
+required = false
+action = "store_true"
+help = "Show only role member additions."
+
+[events.subcommands.role-members.options.removed]
+flags = ["--removed"]
+required = false
+action = "store_true"
+help = "Show only role member removals."
+[events.subcommands.role-members.fields]
+event_name = "true|Event Name"
+action = "true|Action"
+role_name = "true|Role Name"
+user_name = "true|Username"
+grant_type = "true|Grant Type"
+modified_by = "true|Modified By"
+timestamp = "true|Timestamp"
+severity = "true|Severity"
+
+message = "false|Message"
+audit_exposure = "false|Audit Exposure"
+instance_name = "false|Instance Name"
+remote_address = "false|Remote Address"
+service_name = "false|Service Name"
+ssh_privx_service = "false|SSH PrivX Service"
+version = "false|Version"
+event_id = "false|Event ID (code)"
+user_id = "false|User ID"
+role_id = "false|Role ID"
+
+[events.subcommands.role-members.options]
+ui_display = false
+
+[events.subcommands.query]
+help = """Query events (from db) by name or ID.
+Date range will always be applied. Default range is the last 7 days.
+Run the "List events" report to see unique events currently in the database."""
+
+[events.subcommands.query.options.from_date]
+flags = ["--from-date"]
+required = false
+type = "date"
+help = "From date in YYYY-MM-DD or ISO 8601 format."
+
+[events.subcommands.query.options.to_date]
+flags = ["--to-date"]
+required = false
+type = "date"
+help = "To date (inclusive) in YYYY-MM-DD or ISO 8601 format."
+
+[events.subcommands.query.options.days]
+flags = ["--days"]
+required = false
+help = "Number of days in the past (max 30, overrides from and to dates)"
+
+[events.subcommands.query.options.event_name]
+flags = ["--event-name"]
+required = false
+ui_list = "event_names"
+help = "Filter by event name"
+
+[events.subcommands.query.options.event_id]
+flags = ["--event-id"]
+required = false
+help = "Filter by ID (Overrides event_name)."
+
+[events.subcommands.query.options.json_source]
+flags = ["--json-source"]
+required = false
+action = "store_true"
+help = "Output as original JSON. Overrides JSON checkbox or --to-json CLI flag."
+
+[events.subcommands.query.fields]
+event_name = "true|Event Name"
+timestamp = "true|Timestamp"
+severity = "true|Severity"
+message = "true|Message"
+
+audit_exposure = "false|Audit Exposure"
+instance_name = "false|Instance Name"
+remote_address = "false|Remote Address"
+service_name = "false|Service Name"
+ssh_privx_service = "false|SSH PrivX Service"
+version = "false|Version"
+event_id = "false|Event ID (code)"
+
+[events.subcommands.query.options]
+ui_display = false
+
+[list.subcommands.access-groups]
+help = "List all access groups"
+
+[list.subcommands.access-groups.fields]
+name = "true|Name"
+comment = "true|Comment"
+
+
+id = "false|ID"
+default = "false|Default"
+
+[list.subcommands.access-groups.options]
+ui_display = true
+
+[list.subcommands.api-targets]
+help = "List all API targets"
+
+[list.subcommands.api-targets.fields]
+name = "true|Name"
+access_group_name = "true|Access Group Name"
+authorized_endpoints = "false|Authorized Endpoints"
+
+id = "false|ID"
+access_group_id = "false|Access Group ID"
+audit_enabled = "false|Audit Enabled"
+comment = "false|Comments"
+tls_insecure_skip_verify = "false|TLS Insecure"
+
+[list.subcommands.api-targets.options]
+ui_display = true
+
+[list.subcommands.events]
+help = """List all event types (not the actual events occurrences) that are currently found in the database.\n
+Note: This report will change as different event types are synced."""
+
+[list.subcommands.events.fields]
+event_id = "true|Event ID (code)"
+event_name = "true|Event Name"
+
+[list.subcommands.events.options]
+ui_display = true
+
+[list.subcommands.hosts]
+help = "List all hosts"
+
+[list.subcommands.hosts.fields]
+common_name = "true|Common Name"
+addresses = "true|Addresses"
+access_group_name = "true|Access Group Name"
+services = "false|Services"
+principals = "false|Principals"
+
+id = "false|ID"
+access_group_id = "false|Access Group ID"
+password_rotation_enabled = "false|Password Rotation Status"
+source_id = "false|Source ID"
+comment = "false|Comments"
+audit_enabled = "false|Audit Enabled"
+
+[list.subcommands.hosts.options]
+ui_display = true
+
+[list.subcommands.local-users]
+help = "List all local users"
+
+[list.subcommands.local-users.fields]
+username = "true|Username"
+full_name = "true|Full Name"
+email = "true|Email"
+
+id = "false|ID"
+
+[list.subcommands.local-users.options]
+ui_display = true
+
+[list.subcommands.network-targets]
+help = "List all network targets"
+
+[list.subcommands.network-targets.fields]
+name = "true|Name"
+dst = "true|Destinations"
+
+id = "false|ID"
+
+[list.subcommands.network-targets.options]
+ui_display = true
+
+[list.subcommands.roles]
+help = "List all roles"
+
+[list.subcommands.roles.fields]
+name = "true|Name"
+access_group_name = "true|Access Group Name"
+permit_agent = "false|Permit Agent"
+context = "false|Context Enabled"
+comment = "false|Comment"
+
+access_group_id = "false|Access Group ID"
+id = "false|ID"
+permissions = "false|Permissions"
+
+
+[list.subcommands.roles.options]
+ui_display = true
+
+[list.subcommands.secrets]
+help = "Query secrets by various filtering"
+
+[list.subcommands.secrets.options.name]
+flags = ["--name"]
+required = false
+help = "Filter by secret name (case-insensitive substring match)"
+
+[list.subcommands.secrets.options.read_role]
+flags = ["--read-role"]
+required = false
+help = "Filter by read role name (case-insensitive substring match)"
+
+[list.subcommands.secrets.options.write_role]
+flags = ["--write-role"]
+required = false
+help = "Filter by write role name (case-insensitive substring match)"
+
+[list.subcommands.secrets.fields]
+name = "true|Name"
+read_roles = "true|Read Access Roles"
+write_roles = "true|Write Access Roles"
+
+[list.subcommands.secrets.options]
+ui_display = true
+
+[list.subcommands.sources]
+help = "PrivX user directories and host directories"
+
+[list.subcommands.sources.fields]
+name = "true|Name"
+status_code = "true|Status Code"
+connection_type = "true|Connection Type"
+enabled = "true|Enabled"
+
+id = "false|ID"
+
+[list.subcommands.sources.options]
+ui_display = true
+
+[roles.subcommands.members]
+help = "Get all role members"
+
+[roles.subcommands.members.options.role_name]
+flags = ["--role-name"]
+required = true
+help = "Role name"
+
+[roles.subcommands.members.fields]
+role_name = "true|Role Name"
+principal = "true|Principal"
+full_name = "true|Full Name"
+email = "true|Email"
+access_group_name = "true|Access Group Name"
+samaccountname = "true|SAM Account Name"
+windows_account = "true|Windows Account"
+unix_account = "true|Unix Account"
+source_type = "true|Source Type"
+
+role_id = "false|Role ID"
+user_id = "false|User ID"
+access_group_id = "false|Access Group ID"
+access_group_comment = "false|Access Group Comment"
+
+
+[roles.subcommands.members.options]
+ui_display = true
+
+[roles.subcommands.restrictions]
+help = "Get roles having contextual restrictions"
+
+[roles.subcommands.restrictions.fields]
+role_name = "true|Role Name"
+block_role = "true|Block Role"
+validity = "true|Validity"
+start_time = "true|Start Time"
+end_time = "true|End Time"
+timezone = "true|Timezone"
+ip_masks = "true|IP Masks"
+
+role_id = "false|Role ID"
+
+
+[roles.subcommands.restrictions.options]
+ui_display = true
+
+[roles.subcommands.user]
+help = "Get roles of a user"
+
+[roles.subcommands.user.options.user_name]
+flags = ["--user-name"]
+required = true
+help = "User name to search for"
+
+[roles.subcommands.user.fields]
+role_name = "true|Role Name"
+user_name = "true|User Name"
+access_group_name = "true|Access Group Name"
+block_role = "true|Block Role"
+validity = "true|Validity"
+start_time = "true|Start Time"
+end_time = "true|End Time"
+timezone = "true|Timezone"
+ip_masks = "true|IP Masks"
+
+role_id = "false|Role ID"
+user_id = "false|User ID"
+access_group_id = "false|Access Group ID"
+access_group_comment = "false|Access Group Comment"
+access_group_default = "false|Access Group Default"
+
+[roles.subcommands.user.options]
+ui_display = true
+
+[roles.subcommands.query]
+help = "Query roles by various filtering"
+
+[roles.subcommands.query.options.role_name]
+flags = ["--role-name"]
+required = false
+help = "Filter by role name"
+
+[roles.subcommands.query.options.access_group_name]
+flags = ["--access-group-name"]
+required = false
+help = "Filter by access group name"
+
+[roles.subcommands.query.fields]
+role_name = "true|Role Name"
+access_group_name = "true|Access Group Name"
+block_role = "true|Block Role"
+validity = "true|Validity"
+start_time = "true|Start Time"
+end_time = "true|End Time"
+timezone = "true|Timezone"
+ip_masks = "true|IP Masks"
+
+role_id = "false|Role ID"
+access_group_id = "false|Access Group ID"
+access_group_comment = "false|Access Group Comment"
+access_group_default = "false|Access Group Default"
+
+[roles.subcommands.query.options]
+ui_display = true
+ui_warning = """Not recommended without a "role name" filter when PrivX has many host entries."""

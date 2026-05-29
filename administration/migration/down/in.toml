@@ -1,0 +1,7 @@
+[migration.subcommands.down]
+help = "Roll back latest applied migration(s)"
+
+[migration.subcommands.down.options.steps]
+flags = ["--steps"]
+required = false
+help = "How many latest migrations to roll back (default: 1)"

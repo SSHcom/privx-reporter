@@ -1,0 +1,49 @@
+
+░█▀█░█▀▄░▀█▀░█░█░█░█░░░█▀▄░█▀▀░█▀█░█▀█░█▀▄░▀█▀░█▀▀░█▀▄
+░█▀▀░█▀▄░░█░░▀▄▀░▄▀▄░░░█▀▄░█▀▀░█▀▀░█░█░█▀▄░░█░░█▀▀░█▀▄
+░▀░░░▀░▀░▀▀▀░░▀░░▀░▀░░░▀░▀░▀▀▀░▀░░░▀▀▀░▀░▀░░▀░░▀▀▀░▀░▀
+
+-== Standalone installation complete ==-
+
+If installed files are owned by root, fix permissions:
+
+  sudo chmod -R u+rwX,g+rwX /opt/reporter
+
+Add the PrivX Reporter binaries to the path:
+
+  echo 'export REPORTER_HOME=/opt/reporter' >> ~/.bashrc
+  echo 'export PATH="/opt/reporter/bin:$PATH"' >> ~/.bashrc
+  source ~/.bashrc
+
+Run post-install validation checks:
+
+  post_install
+
+Create the "/opt/reporter/.env" file:
+
+  create_env --db defaults --sync defaults --ui defaults
+
+  If you need to make adjustments, run without "--<db|syc|ui> defaults"
+  as needed or manuallly modify .env
+
+Before starting Docker Compose:
+
+ - Ensure these images are available either locally or in Docker Hub:
+    privxsshcom/privx-reporter-sync:latest
+    privxsshcom/privx-reporter-ui:latest
+
+ - Create report output directory:
+
+    mkdir -p <REPORT_OUT_DIR>   # Use the value of REPORT_OUT_DIR 
+                                # from "/opt/reporter/.env"
+
+Start sync, UI, and local databases:
+
+  cd /opt/reporter
+  docker compose up -d
+
+Verify that the reporter and admin tools can be run:
+
+  report -h
+  admin -h
+

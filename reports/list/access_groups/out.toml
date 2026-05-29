@@ -1,0 +1,10 @@
+[list.subcommands.access-groups.fields]
+name = "true|Name"
+comment = "true|Comment"
+
+
+id = "false|ID"
+default = "false|Default"
+
+[list.subcommands.access-groups.options]
+ui_display = true

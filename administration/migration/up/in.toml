@@ -1,0 +1,2 @@
+[migration.subcommands.up]
+help = "Apply pending migrations"

@@ -1,0 +1,19 @@
+[roles.subcommands.user.fields]
+role_name = "true|Role Name"
+user_name = "true|User Name"
+access_group_name = "true|Access Group Name"
+block_role = "true|Block Role"
+validity = "true|Validity"
+start_time = "true|Start Time"
+end_time = "true|End Time"
+timezone = "true|Timezone"
+ip_masks = "true|IP Masks"
+
+role_id = "false|Role ID"
+user_id = "false|User ID"
+access_group_id = "false|Access Group ID"
+access_group_comment = "false|Access Group Comment"
+access_group_default = "false|Access Group Default"
+
+[roles.subcommands.user.options]
+ui_display = true

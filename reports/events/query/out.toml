@@ -1,0 +1,16 @@
+[events.subcommands.query.fields]
+event_name = "true|Event Name"
+timestamp = "true|Timestamp"
+severity = "true|Severity"
+message = "true|Message"
+
+audit_exposure = "false|Audit Exposure"
+instance_name = "false|Instance Name"
+remote_address = "false|Remote Address"
+service_name = "false|Service Name"
+ssh_privx_service = "false|SSH PrivX Service"
+version = "false|Version"
+event_id = "false|Event ID (code)"
+
+[events.subcommands.query.options]
+ui_display = false

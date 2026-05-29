@@ -1,0 +1,22 @@
+# Backup service image. Built at deploy time via `docker compose build`
+# (build context: /opt/reporter). App code lives under /app so the
+# /opt/reporter volume mount does not shadow it.
+FROM postgres:18
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV BACKUP_DIR=/opt/reporter/.backup
+
+WORKDIR /app
+
+# Backup daemon imports from lib/, so copy the package tree as-is.
+COPY lib/ /app/lib/
+COPY backup_server/ /app/backup_server/
+
+# Disable the postgres image entrypoint so our Python CMD runs as-is.
+ENTRYPOINT []
+CMD ["python3", "-m", "backup_server.main"]

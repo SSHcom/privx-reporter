@@ -1,0 +1,4 @@
+#!/bin/bash
+# Script to run sync-server with environment variables loaded from .env
+
+uv run dotenv run sync-server

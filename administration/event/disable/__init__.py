@@ -1,0 +1,1 @@
+"""Event disable administration subcommand."""

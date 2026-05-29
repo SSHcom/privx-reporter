@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Note: This script will only be used in production (Dockerfile)
+
+if [[ -z "${REPORTER_HOME:-}" ]]; then
+  echo "FATAL: REPORTER_HOME is not set" >&2
+  exit 1
+fi
+
+cd "$REPORTER_HOME"
+
+if [[ " $* " != *" --to-stdout "* ]]; then
+  echo ""
+fi
+
+uv run dotenv run -- report "$@"
+
+if [[ " $* " != *" --to-stdout "* ]]; then
+  echo ""
+fi

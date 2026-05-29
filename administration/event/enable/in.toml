@@ -1,0 +1,7 @@
+[event.subcommands.enable]
+help = "Enable syncing of an event"
+
+[event.subcommands.enable.options.code]
+flags = ["--code"]
+required = true
+help = "The code of the event"

@@ -1,0 +1,15 @@
+[access.subcommands.hosts.fields]
+user_name = "true|Username"
+principal = "true|Principal"
+source_name = "true|Source"
+role_name = "true|Role Name"
+target_host = "true|Target Host"
+target_host_name = "true|Target Host Name"
+target_accounts = "true|Target Accounts"
+
+user_id = "false|User ID"
+role_id = "false|Role ID"
+target_host_id = "false|Target Host ID"
+
+[access.subcommands.hosts.options]
+ui_display = true

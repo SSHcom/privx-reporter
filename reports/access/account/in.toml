@@ -1,0 +1,20 @@
+[access.subcommands.account]
+help = "List who can access specified account on target. Provide either --target-address or --common-name to identify the host."
+
+[access.subcommands.account.options.target_address]
+flags = ["--target-address"]
+required = false
+help = "Target host address"
+
+[access.subcommands.account.options.common_name]
+flags = ["--common-name"]
+required = false
+help = "Target host common name (alternative to --target-address)"
+
+[access.subcommands.account.options.target_account]
+flags = ["--target-account"]
+required = true
+help = "Target account to check access for"
+
+[access.subcommands.account.options]
+ui_display = true

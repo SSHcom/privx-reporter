@@ -1,0 +1,5 @@
+# Subdirectory order for event reports in the UI sidebar.
+# "query" is listed last.
+accounts
+role_members
+query

@@ -1,0 +1,21 @@
+[connections.subcommands.query.fields]
+user_name = "true|Username"
+target_host_address = "true|Target Address"
+target_host_account = "true|Target Account"
+created = "true|Created"
+connected = "true|Connected"
+disconnected = "true|Disconnected"
+duration = "true|Duration"
+status = "true|Status"
+type = "true|Connection Type"
+authorized_endpoints = "true|Authorized Endpoints"
+
+user_display_name = "false|User Display Name"
+user_id = "false|User ID"
+connection_id = "false|Connection ID"
+target_host_common_name = "false|Target Host Common Name"
+target_host_id = "false|Target Host ID"
+target_ips = "false|Target IPs"
+
+[connections.subcommands.query.options]
+ui_display = false

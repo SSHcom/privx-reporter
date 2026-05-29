@@ -1,0 +1,9 @@
+[sync]
+help = "Data sync operations"
+description = """\
+Data sync operations
+
+Subcommands:
+  backfill  Backfill audit events and connections from PrivX
+  trend     Backfill system trend from local sync DB
+"""

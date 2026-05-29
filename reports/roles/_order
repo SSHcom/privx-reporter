@@ -1,0 +1,6 @@
+# Subdirectory order for role reports in the UI sidebar.
+# "query" is listed last.
+members
+restrictions
+user
+query

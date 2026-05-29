@@ -1,0 +1,12 @@
+[access]
+help = "Reports about user and role access to target hosts and accounts"
+description = """\
+Reports about user and role access to target hosts and accounts.
+
+Subcommands:
+  account               List who can access a specified account on a target
+  account-restrictions  List target accounts having command restrictions
+  hosts                 List all target hosts a specified user can access
+  query                 Query host access by various filters
+  role-map              List roles that can access a target host
+"""

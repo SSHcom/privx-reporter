@@ -1,0 +1,15 @@
+[access.subcommands.account-restrictions.fields]
+target_host = "true|Target Host"
+account_name = "true|Account Name"
+default_whitelist_name = "true|Default Whitelist Name"
+whitelist_names = "true|Whitelist Names"
+allow_no_match = "true|Allow No Match"
+audit_match = "true|Audit Match"
+audit_no_match = "true|Audit No Match"
+
+target_host_id = "false|Target Host ID"
+
+[access.subcommands.account-restrictions.options]
+ui_display = true
+ui_warning = """Not recommended without a "target address" filter when PrivX has many host entries."""
+

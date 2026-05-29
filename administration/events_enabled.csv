@@ -1,0 +1,22 @@
+NAME,CODE,SEVERITY,ORIGIN,DESCRIPTION
+Role-added,201,Info(6),Role Store,New role added to the system.
+Role-removed,203,Info(6),Role Store,Role has been removed.
+User-roles-modified,220,Role Store,The user's role associations were changed.
+RoleContext-role-blocked,251,Warning(4),Role Store,RoleContext limitations were violated, role blocked.
+Connection-failed,304,Info(6),"RDP Bastion, RDP Proxy, SSH Bastion",Connection closed with an error.
+User-added,500,Info(6),User Store,New user added to the system.
+User-removed,502,Info(6),User Store,User has been removed.
+Request-added,610,Info(6),Workflow Engine,A request was added.
+Request-removed,612,Info(6),Workflow Engine,A request was removed.
+Decision-made,620,Info(6),Workflow Engine,A decision has been made on a request.
+Host-added,801,Info(6),Host Store,A host was added.
+Host-modified,802,Info(6),Host Store,A host was modified.
+Host-removed,803,Info(6),Host Store,A host was removed.
+Connection-blocked-by-ueba,930,Alert(1),Connection Manager,Connection blocked by Ueba.
+Password-rotation-failure,1706,Alert(1),Secrets Manager,Password rotation failure.
+Target-domain-created,1710,Info(6),Secrets Manager,Target domain created.
+Target-domain-deleted,1712,Info(6),Secrets Manager,Target domain deleted.
+Target-domain-account-scan-failure,1714,Info(6),Secrets Manager,Target domain account scan failure.
+Target-domain-account-onboarding-failure,1715,Info(6),Secrets Manager,Target domain account onboarding failure.
+Managed-account-created,1720,Info(6),Secrets Manager,Managed account created.
+Managed-account-deleted,1722,Info(6),Secrets Manager,Managed account deleted.

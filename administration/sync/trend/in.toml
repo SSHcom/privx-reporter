@@ -1,0 +1,7 @@
+[sync.subcommands.trend]
+help = "Backfill system_trend from local sync DB for recent days"
+
+[sync.subcommands.trend.options.days]
+flags = ["--days"]
+required = false
+help = "How many recent days to backfill from sync DB (default: 90)"

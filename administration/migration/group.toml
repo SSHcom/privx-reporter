@@ -1,0 +1,10 @@
+[migration]
+help = "Database migration management"
+description = """\
+Apply, roll back, or inspect explicit SQL migrations
+
+Subcommands:
+  up       Apply pending migrations
+  down     Roll back latest applied migrations
+  status   Show migration status
+"""

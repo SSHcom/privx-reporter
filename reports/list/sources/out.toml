@@ -1,0 +1,10 @@
+[list.subcommands.sources.fields]
+name = "true|Name"
+status_code = "true|Status Code"
+connection_type = "true|Connection Type"
+enabled = "true|Enabled"
+
+id = "false|ID"
+
+[list.subcommands.sources.options]
+ui_display = true

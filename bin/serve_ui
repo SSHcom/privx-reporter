@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+
+uv run dotenv -f .env run -- python -c "from ui.bootstrap import main; main()"
+cd ui
+uv run dotenv -f ../.env run -- streamlit run app.py --browser.gatherUsageStats false "$@"

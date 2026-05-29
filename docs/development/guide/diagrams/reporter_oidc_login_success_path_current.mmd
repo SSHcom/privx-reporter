@@ -1,0 +1,104 @@
+sequenceDiagram
+    title Reporter OIDC Login Success Path (Current)
+
+    actor User
+    participant Login as Login Page<br/>_0_Login.py
+    participant OIDC as OIDC<br/>complete_oidc_login()
+    participant IdP as IdP<br/>(Keycloak / Entra)
+    participant SessionMgr as Session Manager
+    participant Cookie as Cookie Store
+    participant DB as Reporter DB
+    participant Home as Home Page
+
+    rect rgb(245, 245, 245)
+        note over User,OIDC: Interactive login
+        User->>Login: Open /0_Login
+        Login->>Login: has_oidc_callback_params() = false
+        Login->>Login: setup_page(require_login=false)
+        Login->>OIDC: render_oidc_login(provider)
+
+        OIDC->>IdP: Fetch metadata
+        IdP-->>OIDC: authorization_endpoint,<br/>token_endpoint, jwks_uri
+        OIDC->>OIDC: Generate nonce + PKCE verifier/challenge<br/>+ signed state(provider, iat, nonce, encrypted verifier)
+        OIDC-->>User: Render "Log in with <Provider>"<br/>(code_challenge=S256)
+    end
+
+    rect rgb(245, 245, 245)
+        note over User,Login: IdP redirect
+        User->>IdP: Click login button
+        IdP-->>User: Authenticate
+        IdP-->>Login: Redirect /0_Login?code=...&state=...
+    end
+
+    rect rgb(245, 245, 245)
+        note over User,Home: Callback
+        User->>Login: Open callback URL
+        Login->>Login: has_oidc_callback_params() = true
+        Login->>Login: _setup_callback_page()
+        Login->>OIDC: complete_oidc_login()
+
+        OIDC->>OIDC: 01 callback start
+        OIDC->>OIDC: 02 provider error check passed
+        OIDC->>OIDC: 03 authorization code present
+        OIDC->>OIDC: 04 state param present
+        OIDC->>OIDC: Clear query params immediately
+
+        OIDC->>OIDC: 05 duplicate-callback guard<br/>(resume from pending state if needed)
+        OIDC->>OIDC: 06 verify signed state + age<br/>(resolve provider, decrypt PKCE verifier)
+        OIDC->>IdP: Load metadata
+        IdP-->>OIDC: token_endpoint + jwks_uri
+        OIDC->>OIDC: 07 metadata loaded
+
+        OIDC->>IdP: 08 exchange code + code_verifier for tokens
+        IdP-->>OIDC: access_token,<br/>refresh_token,<br/>id_token
+        OIDC->>IdP: Fetch JWKS via jwks_uri
+        IdP-->>OIDC: signing keys
+        OIDC->>OIDC: Validate ID token + nonce
+        OIDC->>OIDC: Resolve username
+        OIDC->>OIDC: Store pending validated callback state<br/>(OIDC_PENDING_*, OIDC_LAST_CODE)
+        OIDC->>OIDC: 09 claims validated
+
+        OIDC->>DB: get_user_for_login(username)
+        DB-->>OIDC: user row
+        OIDC->>OIDC: 10 local user resolved
+        Note right of OIDC: If user missing and auto-provision enabled,<br/>create_oidc_user() path may run before resolve success.
+
+        OIDC->>OIDC: Write OIDC tokens to session_state
+        OIDC->>SessionMgr: start_session(...)
+        SessionMgr->>DB: create Reporter session
+        DB-->>SessionMgr: session row created
+        SessionMgr->>Cookie: init + set_session_token(...)
+        SessionMgr-->>OIDC: session_token
+        OIDC->>OIDC: 11 reporter session started
+
+        OIDC->>SessionMgr: get_session_token()
+        SessionMgr->>Cookie: read cookie
+        Cookie-->>SessionMgr: token (or none/stale)
+        SessionMgr-->>OIDC: cookie_token
+
+        OIDC->>OIDC: 12 check cookie persistence
+        alt cookie_token != session_token
+            OIDC->>OIDC: show "Finalizing sign-in..."
+            OIDC->>OIDC: clear query params + st.rerun()
+        else cookie persisted
+            OIDC->>OIDC: clear callback state
+            OIDC->>OIDC: 13 login complete
+            OIDC-->>Home: switch_page()
+        end
+    end
+
+    rect rgb(245, 245, 245)
+        note over User,Home: Rerun / restore path
+        User->>Login: Rerun /0_Login
+        Login->>Login: has_oidc_callback_params() = false
+        Login->>Login: setup_page()
+        Login->>SessionMgr: restore_session()
+
+        SessionMgr->>Cookie: read cookie / in-memory token
+        Cookie-->>SessionMgr: token (or lagging cookie)
+        SessionMgr->>DB: load session by token
+        DB-->>SessionMgr: valid session
+        SessionMgr->>SessionMgr: hydrate auth state
+        Login->>Login: already authenticated
+        Login-->>Home: switch_page()
+    end

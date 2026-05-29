@@ -1,0 +1,74 @@
+version: "3"
+
+silent: true
+
+tasks:
+  default:
+    desc: Show all available tasks
+    cmds:
+      - task --list
+
+  combine-configs:
+    desc: Combine report and administration configs into single files
+    cmds:
+      - bash bin/tasks/combine_configs.sh
+
+  docker-db:
+    desc: Start the DB container
+    cmds:
+      - docker-compose -f docker-compose-db.yml up
+
+  lint:
+    desc: Run linting
+    cmds:
+      - uv run ruff check .
+
+  format:
+    desc: Run formatting
+    cmds:
+      - uv run ruff check . --fix && uv run ruff format .
+
+  type-check:
+    desc: Run type checking with mypy
+    cmds:
+      - uv run mypy lib reports sync_server
+
+  test:
+    desc: Run all tests with pytest
+    cmds:
+      - uv run pytest
+
+  test-unit:
+    desc: Run only unit tests
+    cmds:
+      - uv run pytest -m unit
+
+  test-integration:
+    desc: Run only integration tests
+    cmds:
+      - uv run pytest -m integration
+
+  test-database:
+    desc: Run database-only tests
+    cmds:
+      - uv run pytest -m database tests/lib/database/models/test_schema_parity.py
+
+  test-cov:
+    desc: Run all tests with coverage report
+    cmds:
+      - uv run pytest --cov=lib --cov=sync_server --cov=reporter --cov-report=term-missing
+
+  test-cov-unit:
+    desc: Run unit tests with coverage report
+    cmds:
+      - uv run pytest -m unit --cov=lib --cov=sync_server --cov=reporter --cov-report=term-missing
+
+  test-cov-integration:
+    desc: Run integration tests with coverage report
+    cmds:
+      - uv run pytest -m integration --cov=lib --cov=sync_server --cov=reporter --cov-report=term-missing
+
+  diagram:
+    desc: Convert Mermaid diagrams to SVG
+    cmds:
+      - ./bin/tasks/convert-diagrams.sh docs/development/guide/diagrams/*.mmd

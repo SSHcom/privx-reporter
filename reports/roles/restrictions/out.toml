@@ -1,0 +1,14 @@
+[roles.subcommands.restrictions.fields]
+role_name = "true|Role Name"
+block_role = "true|Block Role"
+validity = "true|Validity"
+start_time = "true|Start Time"
+end_time = "true|End Time"
+timezone = "true|Timezone"
+ip_masks = "true|IP Masks"
+
+role_id = "false|Role ID"
+
+
+[roles.subcommands.restrictions.options]
+ui_display = true

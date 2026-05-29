@@ -1,0 +1,19 @@
+[roles.subcommands.members.fields]
+role_name = "true|Role Name"
+principal = "true|Principal"
+full_name = "true|Full Name"
+email = "true|Email"
+access_group_name = "true|Access Group Name"
+samaccountname = "true|SAM Account Name"
+windows_account = "true|Windows Account"
+unix_account = "true|Unix Account"
+source_type = "true|Source Type"
+
+role_id = "false|Role ID"
+user_id = "false|User ID"
+access_group_id = "false|Access Group ID"
+access_group_comment = "false|Access Group Comment"
+
+
+[roles.subcommands.members.options]
+ui_display = true

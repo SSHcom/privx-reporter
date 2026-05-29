@@ -1,0 +1,7 @@
+[roles.subcommands.members]
+help = "Get all role members"
+
+[roles.subcommands.members.options.role_name]
+flags = ["--role-name"]
+required = true
+help = "Role name"

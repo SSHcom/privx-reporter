@@ -1,0 +1,7 @@
+[roles.subcommands.user]
+help = "Get roles of a user"
+
+[roles.subcommands.user.options.user_name]
+flags = ["--user-name"]
+required = true
+help = "User name to search for"

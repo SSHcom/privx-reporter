@@ -1,0 +1,41 @@
+services:
+  reporter-ui:
+    image: privxsshcom/privx-reporter-ui:latest
+    container_name: reporter-ui
+    restart: unless-stopped
+    ports:
+      - 8501:8501
+    volumes:
+      - ${REPORT_OUT_DIR}:/root/reports
+    networks:
+      - reporter-shared-network
+    environment:
+      REPORT_API_BATCH_SIZE: ${REPORT_API_BATCH_SIZE:-500}
+      REPORT_OUT_DIR: /root/reports
+      UI_TMP_ADMIN_PASSWORD: ${UI_TMP_ADMIN_PASSWORD}
+
+      PRIVX_HOSTNAME: ${PRIVX_HOSTNAME}
+      PRIVX_PORT: ${PRIVX_PORT}
+      PRIVX_API_OAUTH_CLIENT_ID: ${PRIVX_API_OAUTH_CLIENT_ID}
+      PRIVX_API_OAUTH_CLIENT_SECRET: ${PRIVX_API_OAUTH_CLIENT_SECRET}
+      PRIVX_API_CLIENT_ID: ${PRIVX_API_CLIENT_ID}
+      PRIVX_API_CLIENT_SECRET: ${PRIVX_API_CLIENT_SECRET}
+      PRIVX_CA_CERT: ${PRIVX_CA_CERT}
+
+      DB_DATA_HOST: ${DB_DATA_HOST}
+      DB_DATA_PORT: ${DB_DATA_PORT}
+      DB_DATA_NAME: ${DB_DATA_NAME}
+      DB_DATA_USER: ${DB_DATA_USER}
+      DB_DATA_PASSWORD: ${DB_DATA_PASSWORD}
+      DB_DATA_SSL_MODE: ${DB_DATA_SSL_MODE}
+
+      DB_ADMIN_HOST: ${DB_ADMIN_HOST}
+      DB_ADMIN_PORT: ${DB_ADMIN_PORT}
+      DB_ADMIN_NAME: ${DB_ADMIN_NAME}
+      DB_ADMIN_USER: ${DB_ADMIN_USER}
+      DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      DB_ADMIN_SSL_MODE: ${DB_ADMIN_SSL_MODE}
+
+networks:
+  reporter-shared-network:
+    name: reporter-shared-network

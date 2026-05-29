@@ -1,0 +1,182 @@
+services:
+  reporter-sync:
+    image: privxsshcom/privx-reporter-sync:latest
+    container_name: reporter-sync
+    restart: unless-stopped
+    depends_on:
+      reporter-data-db:
+        condition: service_healthy
+      reporter-admin-db:
+        condition: service_healthy
+    networks:
+      - reporter-shared-network
+    environment:
+      SYNC_BATCH_SIZE: ${SYNC_BATCH_SIZE}
+      SYNC_SOURCES: ${SYNC_SOURCES}
+      SYNC_CONNECTION: ${SYNC_CONNECTION}
+      SYNC_AUDIT: ${SYNC_AUDIT}
+
+      PRIVX_HOSTNAME: ${PRIVX_HOSTNAME}
+      PRIVX_PORT: ${PRIVX_PORT}
+      PRIVX_API_OAUTH_CLIENT_ID: ${PRIVX_API_OAUTH_CLIENT_ID}
+      PRIVX_API_OAUTH_CLIENT_SECRET: ${PRIVX_API_OAUTH_CLIENT_SECRET}
+      PRIVX_API_CLIENT_ID: ${PRIVX_API_CLIENT_ID}
+      PRIVX_API_CLIENT_SECRET: ${PRIVX_API_CLIENT_SECRET}
+      PRIVX_CA_CERT: ${PRIVX_CA_CERT}
+
+      DB_DATA_HOST: reporter-data-db
+      DB_DATA_PORT: 5432
+      DB_DATA_NAME: ${DB_DATA_NAME}
+      DB_DATA_USER: ${DB_DATA_USER}
+      DB_DATA_PASSWORD: ${DB_DATA_PASSWORD}
+      DB_DATA_SSL_MODE: ${DB_DATA_SSL_MODE}
+
+      DB_ADMIN_HOST: reporter-admin-db
+      DB_ADMIN_PORT: 5432
+      DB_ADMIN_NAME: ${DB_ADMIN_NAME}
+      DB_ADMIN_USER: ${DB_ADMIN_USER}
+      DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      DB_ADMIN_SSL_MODE: ${DB_ADMIN_SSL_MODE}
+
+  reporter-backup:
+    build:
+      context: .
+      dockerfile: Dockerfile-backup
+    container_name: reporter-backup
+    restart: unless-stopped
+    depends_on:
+      reporter-data-db:
+        condition: service_healthy
+      reporter-admin-db:
+        condition: service_healthy
+    networks:
+      - reporter-shared-network
+    volumes:
+      - /opt/reporter:/opt/reporter
+    environment:
+      BACKUP_CONFIG: ${BACKUP_CONFIG}
+
+      DB_DATA_HOST: reporter-data-db
+      DB_DATA_PORT: 5432
+      DB_DATA_NAME: ${DB_DATA_NAME}
+      DB_DATA_USER: ${DB_DATA_USER}
+      DB_DATA_PASSWORD: ${DB_DATA_PASSWORD}
+      DB_DATA_SSL_MODE: ${DB_DATA_SSL_MODE}
+
+      DB_ADMIN_HOST: reporter-admin-db
+      DB_ADMIN_PORT: 5432
+      DB_ADMIN_NAME: ${DB_ADMIN_NAME}
+      DB_ADMIN_USER: ${DB_ADMIN_USER}
+      DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      DB_ADMIN_SSL_MODE: ${DB_ADMIN_SSL_MODE}
+
+  reporter-ui:
+    image: privxsshcom/privx-reporter-ui:latest
+    container_name: reporter-ui
+    restart: unless-stopped
+    depends_on:
+      reporter-data-db:
+        condition: service_healthy
+      reporter-admin-db:
+        condition: service_healthy
+    ports:
+      - 8501:8501
+    volumes:
+      - ${REPORT_OUT_DIR}:/root/reports
+    networks:
+      - reporter-shared-network
+    environment:
+      REPORT_API_BATCH_SIZE: ${REPORT_API_BATCH_SIZE:-500}
+      REPORT_OUT_DIR: /root/reports
+
+      PRIVX_HOSTNAME: ${PRIVX_HOSTNAME}
+      PRIVX_PORT: ${PRIVX_PORT}
+      PRIVX_API_OAUTH_CLIENT_ID: ${PRIVX_API_OAUTH_CLIENT_ID}
+      PRIVX_API_OAUTH_CLIENT_SECRET: ${PRIVX_API_OAUTH_CLIENT_SECRET}
+      PRIVX_API_CLIENT_ID: ${PRIVX_API_CLIENT_ID}
+      PRIVX_API_CLIENT_SECRET: ${PRIVX_API_CLIENT_SECRET}
+      PRIVX_CA_CERT: ${PRIVX_CA_CERT}
+
+      DB_DATA_HOST: reporter-data-db
+      DB_DATA_PORT: 5432
+      DB_DATA_NAME: ${DB_DATA_NAME}
+      DB_DATA_USER: ${DB_DATA_USER}
+      DB_DATA_PASSWORD: ${DB_DATA_PASSWORD}
+      DB_DATA_SSL_MODE: ${DB_DATA_SSL_MODE}
+
+      DB_ADMIN_HOST: reporter-admin-db
+      DB_ADMIN_PORT: 5432
+      DB_ADMIN_NAME: ${DB_ADMIN_NAME}
+      DB_ADMIN_USER: ${DB_ADMIN_USER}
+      DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      DB_ADMIN_SSL_MODE: ${DB_ADMIN_SSL_MODE}
+
+      UI_TMP_ADMIN_PASSWORD: ${UI_TMP_ADMIN_PASSWORD}
+      UI_JWT_EXPIRATION_MINUTES: ${UI_JWT_EXPIRATION_MINUTES}
+      UI_COOKIE_MAX_AGE_MINUTES: ${UI_COOKIE_MAX_AGE_MINUTES}
+      UI_ENABLE_SESSION_DEBUG: ${UI_ENABLE_SESSION_DEBUG}
+      UI_AUTH_MODE: ${UI_AUTH_MODE}
+      SSL_CERT: /opt/reporter/certs/fullchain.pem
+      SSL_KEY: /opt/reporter/certs/privatekey.pem
+
+  reporter-data-db:
+    image: timescale/timescaledb:latest-pg18
+    container_name: reporter-data-db
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/usr/local/bin/pg_ssl_entry_point.sh"]
+    command: >
+      postgres
+      -c ssl=${DB_DATA_SSL_MODE:-off}
+      -c ssl_cert_file=/var/lib/postgresql/certs/server.crt
+      -c ssl_key_file=/var/lib/postgresql/certs/server.key
+      -c hba_file=/var/lib/postgresql/certs/pg_hba.conf
+    ports:
+      - ${DB_DATA_PORT:-5454}:5432
+    environment:
+      POSTGRES_USER: ${DB_DATA_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_DATA_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_DATA_NAME:-report_data}
+    volumes:
+      - /opt/reporter/.volumes/data-db:/var/lib/postgresql
+      - ./.pg-ssl:/certs-src:ro
+      - ./.pg-ssl/pg_ssl_entry_point.sh:/usr/local/bin/pg_ssl_entry_point.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - reporter-shared-network
+
+  reporter-admin-db:
+    image: postgres:18
+    container_name: reporter-admin-db
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/usr/local/bin/pg_ssl_entry_point.sh"]
+    command: >
+      postgres
+      -c ssl=${DB_ADMIN_SSL_MODE:-off}
+      -c ssl_cert_file=/var/lib/postgresql/certs/server.crt
+      -c ssl_key_file=/var/lib/postgresql/certs/server.key
+      -c hba_file=/var/lib/postgresql/certs/pg_hba.conf
+    ports:
+      - ${DB_ADMIN_PORT:-5455}:5432
+    environment:
+      POSTGRES_USER: ${DB_ADMIN_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_ADMIN_NAME:-report_admin}
+    volumes:
+      - /opt/reporter/.volumes/admin-db:/var/lib/postgresql
+      - ./.pg-ssl:/certs-src:ro
+      - ./.pg-ssl/pg_ssl_entry_point.sh:/usr/local/bin/pg_ssl_entry_point.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - reporter-shared-network
+
+networks:
+  reporter-shared-network:
+    name: reporter-shared-network

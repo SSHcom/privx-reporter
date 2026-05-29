@@ -1,0 +1,33 @@
+{
+  "name": "custom-cookie-component",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "streamlit-component-lib": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "prettier": "^3.6.2",
+    "postcss": "^8.5.10",
+    "typescript": "^5.8.3",
+    "vite": "^6.4.2"
+  },
+  "scripts": {
+    "start": "vite",
+    "build": "tsc && vite build"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "homepage": "."
+}

@@ -1,0 +1,11 @@
+[roles]
+help = "Reports about roles, their members and restrictions"
+description = """\
+Reports about roles, their members and restrictions.
+
+Subcommands:
+  members       List all members of a role
+  query         Query roles by various filters
+  restrictions  List roles having contextual restrictions
+  user          List all roles assigned to a user
+"""

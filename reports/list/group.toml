@@ -1,0 +1,15 @@
+[list]
+help = "List various PrivX entities"
+description = """\
+List various PrivX entities.
+
+Subcommands:
+  access-groups    List all access groups
+  local-users      List all local users
+  hosts            List all hosts
+  network-targets  List all network targets
+  api-targets      List all API targets
+  roles            List all roles
+  secrets          Query secrets by name or role
+  sources          PrivX user directories and host directories
+"""

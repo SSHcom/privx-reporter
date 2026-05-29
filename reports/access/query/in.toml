@@ -1,0 +1,59 @@
+[access.subcommands.query]
+help = """Query host access by various filters. At least one filter must be provided.
+Note: --user-name alone is not allowed (could fetch too many hosts). 
+If you only want to filter by user, use the "Access hosts" report instead."""
+
+[access.subcommands.query.options.target_address]
+flags = ["--target-address"]
+required = false
+help = """Filter by host address (case-sensitive substring match).
+Examples: '172.31', 'ip-172', 'prod-server'"""
+
+[access.subcommands.query.options.common_name]
+flags = ["--common-name"]
+required = false
+help = """Filter by host common name (case-sensitive substring match).
+Examples: 'DEMO-PrivXDB', 'web-server'"""
+
+[access.subcommands.query.options.target_account]
+flags = ["--target-account"]
+required = false
+help = """Filter results to only show access for a specific target account.
+Examples: 'root', 'admin', 'rocky'"""
+
+[access.subcommands.query.options.access_group_name]
+flags = ["--access-group-name"]
+required = false
+help = """Filter by access group name (case-insensitive substring match).
+Examples: 'Production', 'prod', 'Default'"""
+
+[access.subcommands.query.options.access_group_comment]
+flags = ["--access-group-comment"]
+required = false
+help = """Filter by access group comment (case-insensitive substring match).
+Examples: "production environment", "AWS EU", "staging" """
+
+[access.subcommands.query.options.service_type]
+flags = ["--service-type"]
+required = false
+help = "Filter by service type (case-insensitive exact match). Must be exact service name. Examples: SSH, RDP, VNC, HTTP"
+
+[access.subcommands.query.options.role_name]
+flags = ["--role-name"]
+required = false
+help = """Filter by exact role name (case-insensitive exact match).
+Examples: "Linux-admin" (matches only "Linux-admin", not "Azure-Linux-admins" or "demo-linux-admin")"""
+
+[access.subcommands.query.options.user_name]
+flags = ["--user-name"]
+required = false
+help = """Filter by user user name (case-insensitive substring match).
+Note: Cannot be used alone, but must be combined with at least one other filter.
+For filtering by user only, use the --access --hosts report instead."""
+
+[access.subcommands.query.options.tags]
+flags = ["--tags"]
+required = false
+help = """Filter by host tags (case-insensitive substring match).
+Note: Result will include hosts having any of the provided tasks.
+Use ',' as separator for multiple tags."""

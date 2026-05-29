@@ -1,0 +1,38 @@
+services:
+  reporter-sync:
+    image: privxsshcom/privx-reporter-sync:latest
+    container_name: reporter-sync
+    restart: unless-stopped
+    networks:
+      - reporter-shared-network
+    environment:
+      SYNC_BATCH_SIZE: ${SYNC_BATCH_SIZE}
+      SYNC_SOURCES: ${SYNC_SOURCES}
+      SYNC_CONNECTION: ${SYNC_CONNECTION}
+      SYNC_AUDIT: ${SYNC_AUDIT}
+
+      PRIVX_HOSTNAME: ${PRIVX_HOSTNAME}
+      PRIVX_PORT: ${PRIVX_PORT}
+      PRIVX_API_OAUTH_CLIENT_ID: ${PRIVX_API_OAUTH_CLIENT_ID}
+      PRIVX_API_OAUTH_CLIENT_SECRET: ${PRIVX_API_OAUTH_CLIENT_SECRET}
+      PRIVX_API_CLIENT_ID: ${PRIVX_API_CLIENT_ID}
+      PRIVX_API_CLIENT_SECRET: ${PRIVX_API_CLIENT_SECRET}
+      PRIVX_CA_CERT: ${PRIVX_CA_CERT}
+
+      DB_DATA_HOST: ${DB_DATA_HOST}
+      DB_DATA_PORT: ${DB_DATA_PORT}
+      DB_DATA_NAME: ${DB_DATA_NAME}
+      DB_DATA_USER: ${DB_DATA_USER}
+      DB_DATA_PASSWORD: ${DB_DATA_PASSWORD}
+      DB_DATA_SSL_MODE: ${DB_DATA_SSL_MODE}
+
+      DB_ADMIN_HOST: ${DB_ADMIN_HOST}
+      DB_ADMIN_PORT: ${DB_ADMIN_PORT}
+      DB_ADMIN_NAME: ${DB_ADMIN_NAME}
+      DB_ADMIN_USER: ${DB_ADMIN_USER}
+      DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      DB_ADMIN_SSL_MODE: ${DB_ADMIN_SSL_MODE}
+      
+networks:
+  reporter-shared-network:
+    name: reporter-shared-network

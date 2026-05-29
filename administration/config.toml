@@ -1,0 +1,114 @@
+[event]
+help = "Event syncing management"
+description = """\
+Enable or disable events to be synced or list available events
+
+Subcommands:
+  enable   Enable syncing of an event
+  disable  Disable syncing an event
+  list     List available events
+"""
+
+[migration]
+help = "Database migration management"
+description = """\
+Apply, roll back, or inspect explicit SQL migrations
+
+Subcommands:
+  up       Apply pending migrations
+  down     Roll back latest applied migrations
+  status   Show migration status
+"""
+
+[sync]
+help = "Data sync operations"
+description = """\
+Data sync operations
+
+Subcommands:
+  backfill  Backfill audit events and connections from PrivX
+  trend     Backfill system trend from local sync DB
+"""
+
+[event.subcommands.disable]
+help = "Disable syncing of an event"
+
+[event.subcommands.disable.options.code]
+flags = ["--code"]
+required = true
+help = "The code of the event"
+
+[event.subcommands.enable]
+help = "Enable syncing of an event"
+
+[event.subcommands.enable.options.code]
+flags = ["--code"]
+required = true
+help = "The code of the event"
+
+[event.subcommands.list]
+help = "List available events"
+
+[event.subcommands.list.options.enabled]
+flags = ["--enabled"]
+required = false
+action = "store_true"
+help = "Show only enabled events"
+
+[event.subcommands.list.options.disabled]
+flags = ["--disabled"]
+required = false
+action = "store_true"
+help = "Show only disabled events"
+
+[event.subcommands.list.options.fixed]
+flags = ["--fixed"]
+required = false
+action = "store_true"
+help = """Show events that are always enabled (that can't be disabled).
+This flag supersedes "enabled" and "disabled" flags"""
+[migration.subcommands.down]
+help = "Roll back latest applied migration(s)"
+
+[migration.subcommands.down.options.steps]
+flags = ["--steps"]
+required = false
+help = "How many latest migrations to roll back (default: 1)"
+
+[migration.subcommands.status]
+help = "Show applied and pending migrations"
+
+[migration.subcommands.up]
+help = "Apply pending migrations"
+
+[sync.subcommands.backfill]
+help = "Backfill historical audit events and connections from PrivX API"
+
+[sync.subcommands.backfill.options.days]
+flags = ["--days"]
+required = false
+help = "Number of days to look back from today"
+
+[sync.subcommands.backfill.options.from_date]
+flags = ["--from"]
+required = false
+help = "Start date for backfill in YYYY-MM-DD format (syncs from this date until today)"
+
+[sync.subcommands.backfill.options.source]
+flags = ["--source"]
+required = false
+help = "Data source to backfill: audit, connection, or all (default: all)"
+
+[sync.subcommands.backfill.options.batch_size]
+flags = ["--batch-size"]
+required = false
+help = "Number of records to fetch per batch (default is decided by SYNC_BATCH_SIZE environment variable)."
+
+[sync.subcommands.trend]
+help = "Backfill system_trend from local sync DB for recent days"
+
+[sync.subcommands.trend.options.days]
+flags = ["--days"]
+required = false
+help = "How many recent days to backfill from sync DB (default: 90)"
+

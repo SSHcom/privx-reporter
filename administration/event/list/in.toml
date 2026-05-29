@@ -1,0 +1,21 @@
+[event.subcommands.list]
+help = "List available events"
+
+[event.subcommands.list.options.enabled]
+flags = ["--enabled"]
+required = false
+action = "store_true"
+help = "Show only enabled events"
+
+[event.subcommands.list.options.disabled]
+flags = ["--disabled"]
+required = false
+action = "store_true"
+help = "Show only disabled events"
+
+[event.subcommands.list.options.fixed]
+flags = ["--fixed"]
+required = false
+action = "store_true"
+help = """Show events that are always enabled (that can't be disabled).
+This flag supersedes "enabled" and "disabled" flags"""

@@ -1,0 +1,20 @@
+{
+  "created": "2021-01-01T00:00:00Z",
+  "message": {
+    "count": "1",
+    "message": "Host Removed",
+    "version": "42.0-73",
+    "severity": "6",
+    "sourceID": "sample-source-id",
+    "timestamp": "2021-01-01T00:00:00Z",
+    "instanceName": "sample-host",
+    "cloudProvider": "AWS",
+    "remoteAddress": "0.0.0.0",
+    "audit-exposure": "SSH-PRIVX-AUDIT",
+    "SSH-PrivX-service": "HOST-STORE"
+  },
+  "event_id": "803",
+  "event_name": "Host-removed",
+  "service_id": "sample-service-id",
+  "service_name": "HOST-STORE"
+}

@@ -1,0 +1,7 @@
+[access.subcommands.account-restrictions]
+help = "List target accounts having command restrictions"
+
+[access.subcommands.account-restrictions.options.target_address]
+flags = ["--target-address"]
+required = false
+help = "Target host address or hostname (optional, searches all hosts if not provided)"

@@ -1,0 +1,18 @@
+[roles.subcommands.query.fields]
+role_name = "true|Role Name"
+access_group_name = "true|Access Group Name"
+block_role = "true|Block Role"
+validity = "true|Validity"
+start_time = "true|Start Time"
+end_time = "true|End Time"
+timezone = "true|Timezone"
+ip_masks = "true|IP Masks"
+
+role_id = "false|Role ID"
+access_group_id = "false|Access Group ID"
+access_group_comment = "false|Access Group Comment"
+access_group_default = "false|Access Group Default"
+
+[roles.subcommands.query.options]
+ui_display = true
+ui_warning = """Not recommended without a "role name" filter when PrivX has many host entries."""

@@ -1,0 +1,66 @@
+services:
+  report-data-database:
+    image: timescale/timescaledb:latest-pg18
+    container_name: reporter-dev-data-db
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/usr/local/bin/dev_entry_point.sh"]
+    command: >
+      postgres
+      -c ssl=${DB_DATA_SSL_MODE:-off}
+      -c ssl_cert_file=/var/lib/postgresql/certs/server.crt
+      -c ssl_key_file=/var/lib/postgresql/certs/server.key
+      -c hba_file=/var/lib/postgresql/certs/pg_hba.conf
+    ports:
+      - ${DB_DATA_PORT:-5444}:5432
+    environment:
+      POSTGRES_USER: ${DB_DATA_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_DATA_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_DATA_NAME:-report_data}
+    volumes:
+      - postgres_data_data:/var/lib/postgresql
+      - ./.dev-pg-ssl:/certs-src:ro
+      - ./release/common/pg_ssl_entry_point.sh:/usr/local/bin/dev_entry_point.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - reporter-shared-network
+
+  report-admin-database:
+    image: postgres:18
+    container_name: reporter-dev-admin-db
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/usr/local/bin/dev_entry_point.sh"]
+    command: >
+      postgres
+      -c ssl=${DB_ADMIN_SSL_MODE:-off}
+      -c ssl_cert_file=/var/lib/postgresql/certs/server.crt
+      -c ssl_key_file=/var/lib/postgresql/certs/server.key
+      -c hba_file=/var/lib/postgresql/certs/pg_hba.conf
+    ports:
+      - ${DB_ADMIN_PORT:-5445}:5432
+    environment:
+      POSTGRES_USER: ${DB_ADMIN_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_ADMIN_NAME:-report_admin}
+    volumes:
+      - postgres_data_admin:/var/lib/postgresql
+      - ./.dev-pg-ssl:/certs-src:ro
+      - ./release/common/pg_ssl_entry_point.sh:/usr/local/bin/dev_entry_point.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - reporter-shared-network
+
+volumes:
+  postgres_data_data:
+  postgres_data_admin:
+
+networks:
+  reporter-shared-network:
+    name: reporter-shared-network

@@ -1,0 +1,37 @@
+# Dev/local infrastructure - not needed in build context
+.dev-pg-ssl/
+docker-compose*.yml
+
+# Keep only release files required by install/build paths
+release/**
+!release/common/
+!release/common/pg_ssl_entry_point.sh
+!release/reporter_cli/
+!release/reporter_cli/instructions*.txt
+!release/reporter_cli/install.sh
+!release/reporter_cli/docker-compose.yml
+!release/reporter_cli/.env-example*
+!release/reporter_cli/Dockerfile-backup
+!release/reporter_ui/
+!release/reporter_ui/certs/
+!release/reporter_ui/certs/*
+
+# Dev tooling and docs
+.git/
+.cursor/
+tests/
+docs/
+openspec/
+*.md
+Taskfile.yml
+opencode.json
+
+# Runtime output
+report_out/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/

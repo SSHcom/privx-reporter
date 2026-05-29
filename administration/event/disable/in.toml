@@ -1,0 +1,7 @@
+[event.subcommands.disable]
+help = "Disable syncing of an event"
+
+[event.subcommands.disable.options.code]
+flags = ["--code"]
+required = true
+help = "The code of the event"

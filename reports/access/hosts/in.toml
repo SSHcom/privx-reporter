@@ -1,0 +1,33 @@
+[access.subcommands.hosts]
+help = """List all target hosts a specified user can access for each assigned role.
+At least one of --user-name, --user-id, or --principal is required."""
+
+[access.subcommands.hosts.options.user_name]
+flags = ["--user-name"]
+required = false
+help = """Filter by exact user full name (case-insensitive exact match).
+Examples: "Jane Doe" (matches only "Jane Doe", not "Jane Doe Admin")"""
+
+[access.subcommands.hosts.options.user_id]
+flags = ["--user-id"]
+required = false
+help = "Filter by user ID (uuid)"
+
+[access.subcommands.hosts.options.principal]
+flags = ["--principal"]
+required = false
+help = """Filter by exact principal/username (case-insensitive exact match).
+Examples: "user-1" (matches only "user-1", not "user1")"""
+
+[access.subcommands.hosts.options.directory]
+flags = ["--directory"]
+required = false
+help = """Filter results to users from a specific directory source type.
+Examples: "LOCAL", "MICROSOFTGRAPH", "LDAP" """
+
+[access.subcommands.hosts.options.to_map]
+flags = ["--to-map"]
+required = false
+action = "store_true"
+ui_hidden = true
+help = "Display output as an ASCII tree map showing User -> Role -> Host relationships. Only works with --user-id. CLI only."

@@ -1,0 +1,44 @@
+#!/bin/bash
+set -euo pipefail
+
+# Note: This script will only be used in production (Dockerfile)
+
+if [[ -z "${REPORTER_HOME:-}" ]]; then
+  echo "FATAL: REPORTER_HOME is not set" >&2
+  exit 1
+fi
+
+cd "$REPORTER_HOME"
+export PYTHONPATH="$REPORTER_HOME${PYTHONPATH:+:$PYTHONPATH}"
+
+# Resolve SSL certificate and key file paths
+if [[ -n "${SSL_CERT:-}" && -z "${SSL_KEY:-}" ]]; then
+  echo "FATAL: SSL_CERT is set but SSL_KEY is not set" >&2
+  exit 1
+fi
+
+if [[ -z "${SSL_CERT:-}" && -n "${SSL_KEY:-}" ]]; then
+  echo "FATAL: SSL_KEY is set but SSL_CERT is not set" >&2
+  exit 1
+fi
+
+SSL_SERVER_ARGS=""
+if [[ -n "${SSL_CERT:-}" && -n "${SSL_KEY:-}" ]]; then
+  SSL_SERVER_ARGS="--server.sslCertFile=$SSL_CERT --server.sslKeyFile=$SSL_KEY"
+fi
+
+# Run the UI server
+if [[ "${1:-}" == "--no-dotenv" ]]; then
+  python -c "from ui.bootstrap import main; main()"
+  cd ui
+  streamlit run app.py --browser.gatherUsageStats false --server.address 0.0.0.0 ${SSL_SERVER_ARGS}
+else
+  if ! command -v dotenv >/dev/null 2>&1; then
+    echo "FATAL: dotenv CLI is not installed in this image" >&2
+    echo "Hint: run with --no-dotenv or include python-dotenv[cli] in runtime dependencies" >&2
+    exit 1
+  fi
+  dotenv run -- python -c "from ui.bootstrap import main; main()"
+  cd ui
+  dotenv -f ../.env run -- streamlit run app.py --browser.gatherUsageStats false --server.address 0.0.0.0 ${SSL_SERVER_ARGS}
+fi

@@ -1,0 +1,14 @@
+[list.subcommands.roles.fields]
+name = "true|Name"
+access_group_name = "true|Access Group Name"
+permit_agent = "false|Permit Agent"
+context = "false|Context Enabled"
+comment = "false|Comment"
+
+access_group_id = "false|Access Group ID"
+id = "false|ID"
+permissions = "false|Permissions"
+
+
+[list.subcommands.roles.options]
+ui_display = true

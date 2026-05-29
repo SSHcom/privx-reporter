@@ -1,0 +1,8 @@
+[list.subcommands.network-targets.fields]
+name = "true|Name"
+dst = "true|Destinations"
+
+id = "false|ID"
+
+[list.subcommands.network-targets.options]
+ui_display = true

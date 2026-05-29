@@ -1,0 +1,7 @@
+[access.subcommands.role-map]
+help = "List roles that can access a target host"
+
+[access.subcommands.role-map.options.target_address]
+flags = ["--target-address"]
+required = true
+help = "Target host address or hostname"

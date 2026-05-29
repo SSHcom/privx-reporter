@@ -1,0 +1,23 @@
+[events.subcommands.role-members.fields]
+event_name = "true|Event Name"
+action = "true|Action"
+role_name = "true|Role Name"
+user_name = "true|Username"
+grant_type = "true|Grant Type"
+modified_by = "true|Modified By"
+timestamp = "true|Timestamp"
+severity = "true|Severity"
+
+message = "false|Message"
+audit_exposure = "false|Audit Exposure"
+instance_name = "false|Instance Name"
+remote_address = "false|Remote Address"
+service_name = "false|Service Name"
+ssh_privx_service = "false|SSH PrivX Service"
+version = "false|Version"
+event_id = "false|Event ID (code)"
+user_id = "false|User ID"
+role_id = "false|Role ID"
+
+[events.subcommands.role-members.options]
+ui_display = false

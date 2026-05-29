@@ -1,0 +1,19 @@
+[access.subcommands.query.fields]
+user_name = "true|User Name"
+role_name = "true|Role Name"
+access_group_name = "true|Access Group Name"
+target_host = "true|Target Host"
+target_account = "true|Target Account"
+service_type = "true|Service Type"
+
+user_id = "false|User ID"
+role_id = "false|Role ID"
+target_host_id = "false|Target Host ID"
+host_common_name = "false|Host Common Name"
+access_group_id = "false|Access Group ID"
+access_group_comment = "false|Access Group Comment"
+access_group_default = "false|Access Group Default"
+tags = "false|Tags"
+
+[access.subcommands.query.options]
+ui_display = true

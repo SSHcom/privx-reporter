@@ -1,0 +1,242 @@
+{
+  "id": "sample-connection-id",
+  "mode": "UI",
+  "type": "SSH",
+  "status": "DISCONNECTED",
+  "created": "2021-01-01T00:00:00Z",
+  "updated": "2021-01-01T00:00:30Z",
+  "duration": 30,
+  "proxy_id": "sample-proxy-id",
+  "connected": "2021-01-01T00:00:00Z",
+  "disconnected": "2021-01-01T00:00:30Z",
+  "last_activity": "2021-01-01T00:00:03Z",
+  "index_status": "NOT_INDEXED",
+  "access_group_id": "sample-access-group-id",
+  "user": {
+    "id": "sample-user-id",
+    "display_name": "sample-user"
+  },
+  "user_data": {
+    "id": "sample-user-id",
+    "email": "sample-user@test.local",
+    "roles": [
+      {
+        "id": "sample-role-id",
+        "name": "sample-role",
+        "system": false,
+        "context": {
+          "enabled": false,
+          "end_time": "",
+          "ip_masks": null,
+          "timezone": "",
+          "validity": null,
+          "start_time": ""
+        },
+        "explicit": true,
+        "implicit": false,
+        "grant_type": "PERMANENT",
+        "permissions": [
+          "hosts-view"
+        ],
+        "access_group_id": "sample-access-group-id"
+      }
+    ],
+    "source": "sample-source-id",
+    "created": "2021-01-01T00:00:00Z",
+    "full_name": "Sample User",
+    "principal": "sample-user",
+    "attributes": [
+      {
+        "key": "windows_sid",
+        "value": ""
+      }
+    ],
+    "permissions": null,
+    "source_type": "LOCAL",
+    "unix_account": "sample-user",
+    "source_user_id": "sample-user-id",
+    "windows_account": "sample-user",
+    "RefreshTimestamp": "1609459200",
+    "distinguished_name": "sample-user"
+  },
+  "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+  "user_roles": [
+    {
+      "id": "sample-role-id",
+      "name": "sample-role"
+    }
+  ],
+  "target_host": {
+    "id": "sample-host-id",
+    "common_name": "sample-host"
+  },
+  "target_host_data": {
+    "id": "sample-host-id",
+    "tags": [
+      "Env=Test",
+      "Name=sample-host",
+      "owner=sample.owner@test.local"
+    ],
+    "toch": false,
+    "tofu": true,
+    "zone": "test-zone-1a",
+    "scope": [],
+    "status": [
+      {
+        "k": "Status",
+        "v": "RUNNING"
+      },
+      {
+        "k": "StatusUpdated",
+        "v": "2021-01-01T00:00:00Z"
+      }
+    ],
+    "comment": "",
+    "created": "2021-01-01T00:00:00Z",
+    "updated": "2021-01-01T00:00:00Z",
+    "disabled": "FALSE",
+    "services": [
+      {
+        "db": {},
+        "port": 22,
+        "rds_lb": {},
+        "source": "SCAN",
+        "status": "UNKNOWN",
+        "address": "sample-host",
+        "browser": "",
+        "created": "0001-01-01T00:00:00Z",
+        "service": "SSH",
+        "updated": "0001-01-01T00:00:00Z",
+        "rds_type": "",
+        "timezone": "",
+        "auth_type": "",
+        "kiosk_mode": false,
+        "rds_broker": {},
+        "enable_popups": false,
+        "enable_urlbar": false,
+        "enable_navibar": false,
+        "login_page_url": "",
+        "status_updated": "2021-01-01T00:00:00Z",
+        "allowed_domains": null,
+        "enable_devtools": false,
+        "idle_time_limit": 0,
+        "service_version": "",
+        "ssh_tunnel_port": 0,
+        "tls_max_version": "",
+        "tls_min_version": "",
+        "web_x11_backend": "",
+        "login_request_url": "",
+        "use_plaintext_vnc": false,
+        "password_field_name": "",
+        "username_field_name": "",
+        "certificate_template": "",
+        "use_legacy_cipher_suites": false,
+        "allow_modified_web_params": false,
+        "use_for_password_rotation": false,
+        "enable_web_compatibility_mode": false,
+        "login_request_password_property": ""
+      }
+    ],
+    "addresses": [
+      "sample-host"
+    ],
+    "host_type": "t3.medium",
+    "source_id": "sample-source-id",
+    "deployable": false,
+    "principals": [
+      {
+        "roles": [
+          {
+            "id": "sample-principal-role-id",
+            "name": "sample-principal-role"
+          }
+        ],
+        "rotate": false,
+        "source": "UI",
+        "principal": "sample-account",
+        "passphrase": "",
+        "applications": [],
+        "service_options": {
+          "ssh": {
+            "x11": true,
+            "exec": true,
+            "other": true,
+            "shell": true,
+            "tunnels": true,
+            "file_transfer": true
+          }
+        },
+        "use_user_account": false,
+        "username_attribute": "",
+        "command_restrictions": {
+          "enabled": false,
+          "whitelists": [],
+          "default_whitelist": {}
+        },
+        "use_for_password_rotation": false
+      }
+    ],
+    "updated_by": "sample-updated-by-id",
+    "common_name": "sample-host",
+    "external_id": "sample-external-id",
+    "instance_id": "",
+    "organization": "",
+    "user_message": "",
+    "audit_enabled": false,
+    "cloud_provider": "AWS",
+    "access_group_id": "sample-access-group-id",
+    "contact_address": "",
+    "host_certificate": null,
+    "stand_alone_host": null,
+    "distinguished_name": "",
+    "host_classification": "",
+    "organizational_unit": "",
+    "host_certificate_raw": "",
+    "ssh_host_public_keys": [],
+    "cloud_provider_region": "test-region-1",
+    "password_rotation_enabled": false,
+    "session_recording_options": {
+      "disable_clipboard_recording": false,
+      "disable_file_transfer_recording": false
+    }
+  },
+  "target_host_roles": [
+    {
+      "id": "sample-principal-role-id",
+      "name": "sample-principal-role"
+    }
+  ],
+  "target_host_account": "sample-account",
+  "target_host_address": "sample-host:22",
+  "target_api_data": {
+    "id": "",
+    "name": "",
+    "tags": null,
+    "roles": null,
+    "author": "",
+    "created": "",
+    "disabled": "",
+    "access_group_id": "",
+    "target_credential": {
+      "type": ""
+    },
+    "authorized_endpoints": null,
+    "unauthorized_endpoints": null
+  },
+  "target_network_data": {
+    "id": "",
+    "dst": null,
+    "name": "",
+    "tags": null,
+    "roles": null,
+    "author": "",
+    "created": "",
+    "updated": "",
+    "updated_by": "",
+    "integration_type": ""
+  },
+  "remote_address": "0.0.0.0",
+  "authentication_method": [
+    "CERT"
+  ]
+}

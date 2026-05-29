@@ -1,0 +1,35 @@
+
+░█▀█░█▀▄░▀█▀░█░█░█░█░░░█▀▄░█▀▀░█▀█░█▀█░█▀▄░▀█▀░█▀▀░█▀▄
+░█▀▀░█▀▄░░█░░▀▄▀░▄▀▄░░░█▀▄░█▀▀░█▀▀░█░█░█▀▄░░█░░█▀▀░█▀▄
+░▀░░░▀░▀░▀▀▀░░▀░░▀░▀░░░▀░▀░▀▀▀░▀░░░▀▀▀░▀░▀░░▀░░▀▀▀░▀░▀
+
+-== Installation complete ==-
+
+If installed files are owned by root, fix permissions:
+
+  sudo chmod -R u+rwX,g+rwX /opt/reporter
+
+Add the PrivX Reporter binaries to the path:
+
+  echo 'export REPORTER_HOME=/opt/reporter' >> ~/.bashrc
+  echo 'export PATH="/opt/reporter/bin:$PATH"' >> ~/.bashrc
+  source ~/.bashrc
+
+Run post-install validation checks:
+
+  post_install
+
+Create the "/opt/reporter/.env" file:
+
+  create_env --sync skip --ui skip
+
+Create report output directory:
+
+  mkdir -p <REPORT_OUT_DIR>   # Use the value of REPORT_OUT_DIR
+                              # from "/opt/reporter/.env"
+
+Verify that the reporter and admin tool can be run:
+
+  report -h
+  admin -h
+

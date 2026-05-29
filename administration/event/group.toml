@@ -1,0 +1,10 @@
+[event]
+help = "Event syncing management"
+description = """\
+Enable or disable events to be synced or list available events
+
+Subcommands:
+  enable   Enable syncing of an event
+  disable  Disable syncing an event
+  list     List available events
+"""

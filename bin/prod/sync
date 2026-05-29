@@ -1,0 +1,22 @@
+#!/bin/bash
+set -euo pipefail
+
+# Note: This script will only be used in production (Dockerfile)
+
+if [[ -z "${REPORTER_HOME:-}" ]]; then
+  echo "FATAL: REPORTER_HOME is not set" >&2
+  exit 1
+fi
+
+cd "$REPORTER_HOME"
+
+if [[ "${1:-}" == "--no-dotenv" ]]; then
+  sync-server
+else
+  if ! command -v dotenv >/dev/null 2>&1; then
+    echo "FATAL: dotenv CLI is not installed in this image" >&2
+    echo "Hint: run with --no-dotenv or include python-dotenv[cli] in runtime dependencies" >&2
+    exit 1
+  fi
+  dotenv run -- sync-server
+fi

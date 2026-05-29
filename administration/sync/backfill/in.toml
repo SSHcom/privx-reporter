@@ -1,0 +1,22 @@
+[sync.subcommands.backfill]
+help = "Backfill historical audit events and connections from PrivX API"
+
+[sync.subcommands.backfill.options.days]
+flags = ["--days"]
+required = false
+help = "Number of days to look back from today"
+
+[sync.subcommands.backfill.options.from_date]
+flags = ["--from"]
+required = false
+help = "Start date for backfill in YYYY-MM-DD format (syncs from this date until today)"
+
+[sync.subcommands.backfill.options.source]
+flags = ["--source"]
+required = false
+help = "Data source to backfill: audit, connection, or all (default: all)"
+
+[sync.subcommands.backfill.options.batch_size]
+flags = ["--batch-size"]
+required = false
+help = "Number of records to fetch per batch (default is decided by SYNC_BATCH_SIZE environment variable)."
