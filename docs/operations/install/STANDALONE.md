@@ -90,7 +90,7 @@ source ~/.bashrc
 5. Run post-install validation:
 
 ```sh
-post_install
+post_install --secure
 ```
 
 The installer deploys:

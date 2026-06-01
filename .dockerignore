@@ -6,6 +6,7 @@ docker-compose*.yml
 release/**
 !release/common/
 !release/common/pg_ssl_entry_point.sh
+!release/common/security.sh
 !release/reporter_cli/
 !release/reporter_cli/instructions*.txt
 !release/reporter_cli/install.sh
@@ -15,6 +16,8 @@ release/**
 !release/reporter_ui/
 !release/reporter_ui/certs/
 !release/reporter_ui/certs/*
+
+ui/custom/cookie/frontend/node_modules/
 
 # Dev tooling and docs
 .git/
