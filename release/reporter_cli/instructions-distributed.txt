@@ -15,9 +15,9 @@ Add the PrivX Reporter binaries to the path:
   echo 'export PATH="/opt/reporter/bin:$PATH"' >> ~/.bashrc
   source ~/.bashrc
 
-Run post-install validation checks:
+Run post-install validation checks and apply security package pins:
 
-  post_install
+  post_install --secure
 
 Create the "/opt/reporter/.env" file:
 

@@ -34,6 +34,8 @@ install_gid="${INSTALL_GID:-$(stat -c '%g' "$INSTALL_DIR")}"
 
 cp "$REPORTER_HOME/pyproject.toml" "$INSTALL_DIR/pyproject.toml"
 cp "$REPORTER_HOME/uv.lock" "$INSTALL_DIR/uv.lock"
+cp "$REPORTER_HOME/security.sh" "$INSTALL_DIR/security.sh"
+chmod 755 "$INSTALL_DIR/security.sh"
 cp -a "$REPORTER_HOME/lib" "$INSTALL_DIR/lib"
 cp -a "$REPORTER_HOME/reports" "$INSTALL_DIR/reports"
 cp -a "$REPORTER_HOME/administration" "$INSTALL_DIR/administration"

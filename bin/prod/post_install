@@ -2,6 +2,20 @@
 set -euo pipefail
 
 expected_install_dir="/opt/reporter"
+secure=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --secure)
+      secure=true
+      ;;
+    *)
+      echo "FATAL: unknown argument: $arg" >&2
+      echo "Usage: post_install [--secure]" >&2
+      exit 1
+      ;;
+  esac
+done
 
 if [[ -n "${REPORTER_HOME:-}" ]]; then
   reporter_home="$(realpath "$REPORTER_HOME")"
@@ -67,6 +81,18 @@ if [[ "$install_type" == "standalone" ]]; then
     echo "FATAL: docker compose is required for standalone installation" >&2
     exit 1
   fi
+fi
+
+if [[ "$secure" == true ]]; then
+  security_script="$reporter_home/security.sh"
+  if [[ ! -x "$security_script" ]]; then
+    echo "FATAL: missing security script: $security_script" >&2
+    exit 1
+  fi
+
+  cd "$reporter_home"
+  uv sync --frozen --no-dev --no-editable
+  REPORTER_HOME="$reporter_home" "$security_script"
 fi
 
 echo "Post-install checks passed for $install_type installation at $reporter_home."
