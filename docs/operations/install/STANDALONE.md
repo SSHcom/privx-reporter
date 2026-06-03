@@ -171,6 +171,70 @@ You can also run `docker compose down` and then `docker compose up -d`, but that
 
 Do not change database connection environment variables (`DB_DATA_*`, `DB_ADMIN_*`) unless you are intentionally switching to external databases. In standalone deployments these values are expected to point to the local compose services (`reporter-data-db`, `reporter-admin-db`) and their initialized data volumes. Changing them can cause sync/ui startup failures or authentication/connection mismatches.
 
+### How to handle OIDC  environment variables
+
+
+Since the `create_env` script does not create OIDC related variables, you must manually add them to the `.env` file:
+
+- You can copy from the example below and modify as needed.
+- Replace `ENTRA_` with the OIDC provider you want to use (multiple providers are supported)
+- Remember to modify `UI_AUTH_MODE` accordingly
+
+- OIDC example configuration:
+  ```
+  # OIDC providers (uncomment and adjust when UI_AUTH_MODE includes these provider ids)
+  #
+  # IMPORTANT: Also uncomment the corresponding variables in the docker-compose.yml file.
+  ##
+  # Entra ID (public cloud)
+  # ENTRA_OIDC_ISSUER=https://login.microsoftonline.com/<tenant-id>/v2.0
+  # ENTRA_OIDC_CLIENT_ID=<app-client-id>
+  # ENTRA_OIDC_CLIENT_SECRET=<client-secret>
+  # ENTRA_OIDC_REDIRECT_URI=http://localhost:8501/0_Login
+  # ENTRA_OIDC_POST_LOGOUT_REDIRECT_URI=http://localhost:8501/
+  # ENTRA_OIDC_SCOPES="openid profile email offline_access"
+  # ENTRA_OIDC_PROMPT=select_account
+  # ENTRA_OIDC_STATE_SECRET=<long-random-secret>
+  #
+  # Optional: OIDC auto-provisioning (creates Reporter local users on first successful IdP login)
+  # OIDC_AUTO_PROVISION=false
+  # OIDC_AUTO_PROVISION_DEFAULT_ROLE=viewer
+  # OIDC_AUTO_PROVISION_REQUIRE_EMAIL=false
+  # OIDC_AUTO_PROVISION_ALLOWED_EMAIL_DOMAINS=example.com,example.org
+  #
+  # Optional: map IdP group/role claims to Reporter user groups.
+  # Claim path can be simple (groups) or dotted (realm_access.roles).
+  # Mapping applies to auto-provisioned users. Existing local users are not altered.
+  # OIDC_GROUP_CLAIM=groups
+  # OIDC_GROUP_MAPPING='{"idp-admin":"admin","idp-viewer":"viewer","idp-viewer2":"viewer"}'
+  ```
+- You must also expose the variables in `/opt/reporter/docker-compose.yml`.
+- For an _Entra_ configuration add the following to `reporter-ui -> environment`:
+   ```
+  ENTRA_OIDC_ISSUER: ${ENTRA_OIDC_ISSUER}
+  ENTRA_OIDC_CLIENT_ID: ${ENTRA_OIDC_CLIENT_ID}
+  ENTRA_OIDC_CLIENT_SECRET: ${ENTRA_OIDC_CLIENT_SECRET}
+  ENTRA_OIDC_REDIRECT_URI: ${ENTRA_OIDC_REDIRECT_URI}
+  ENTRA_OIDC_POST_LOGOUT_REDIRECT_URI: ${ENTRA_OIDC_POST_LOGOUT_REDIRECT_URI}
+  ENTRA_OIDC_SCOPES: ${ENTRA_OIDC_SCOPES}
+  ENTRA_OIDC_PROMPT: ${ENTRA_OIDC_PROMPT}
+  ENTRA_OIDC_STATE_SECRET: ${ENTRA_OIDC_STATE_SECRET}
+  ```
+- For other providers replace `ENTRA_` with actual provider.
+
+- If you want to use auto provisioning of users, also add:
+  ```
+  OIDC_AUTO_PROVISION: ${OIDC_AUTO_PROVISION}
+  OIDC_AUTO_PROVISION_DEFAULT_ROLE: ${OIDC_AUTO_PROVISION_DEFAULT_ROLE}
+  OIDC_AUTO_PROVISION_REQUIRE_EMAIL: ${OIDC_AUTO_PROVISION_REQUIRE_EMAIL}
+  OIDC_AUTO_PROVISION_ALLOWED_EMAIL_DOMAINS:${OIDC_AUTO_PROVISION_ALLOWED_EMAIL_DOMAINS}
+  OIDC_GROUP_CLAIM: ${OIDC_GROUP_CLAIM}
+  OIDC_GROUP_MAPPING: ${OIDC_GROUP_MAPPING}
+  ```
+
+Reference [OIDC Auth guide](../OIDC_UI_AUTH_GUIDE.md) for more OIDC details.
+
+
 ## Backups
 
 ### Database backup
