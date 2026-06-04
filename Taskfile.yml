@@ -2,6 +2,10 @@ version: "3"
 
 silent: true
 
+vars:
+  PYTHON_LINT_PATHS: apps/python tests/python live_test
+  PYTHON_TEST_DATABASE: tests/python/lib/database/models/test_schema_parity.py
+
 tasks:
   default:
     desc: Show all available tasks
@@ -21,17 +25,17 @@ tasks:
   lint:
     desc: Run linting
     cmds:
-      - uv run ruff check .
+      - uv run ruff check {{.PYTHON_LINT_PATHS}}
 
   format:
     desc: Run formatting
     cmds:
-      - uv run ruff check . --fix && uv run ruff format .
+      - uv run ruff check {{.PYTHON_LINT_PATHS}} --fix && uv run ruff format {{.PYTHON_LINT_PATHS}}
 
   type-check:
     desc: Run type checking with mypy
     cmds:
-      - uv run mypy lib reports sync_server
+      - uv run mypy
 
   test:
     desc: Run all tests with pytest
@@ -51,22 +55,22 @@ tasks:
   test-database:
     desc: Run database-only tests
     cmds:
-      - uv run pytest -m database tests/lib/database/models/test_schema_parity.py
+      - uv run pytest -m database {{.PYTHON_TEST_DATABASE}}
 
   test-cov:
     desc: Run all tests with coverage report
     cmds:
-      - uv run pytest --cov=lib --cov=sync_server --cov=reporter --cov-report=term-missing
+      - uv run pytest --cov --cov-report=term-missing
 
   test-cov-unit:
     desc: Run unit tests with coverage report
     cmds:
-      - uv run pytest -m unit --cov=lib --cov=sync_server --cov=reporter --cov-report=term-missing
+      - uv run pytest -m unit --cov --cov-report=term-missing
 
   test-cov-integration:
     desc: Run integration tests with coverage report
     cmds:
-      - uv run pytest -m integration --cov=lib --cov=sync_server --cov=reporter --cov-report=term-missing
+      - uv run pytest -m integration --cov --cov-report=term-missing
 
   diagram:
     desc: Convert Mermaid diagrams to SVG

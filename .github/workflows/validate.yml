@@ -3,6 +3,13 @@ name: merge-validation
 on:
   pull_request:
     branches: [main, develop]
+    paths:
+      - "apps/python/**"
+      - "tests/python/**"
+      - "live_test/**"
+      - "pyproject.toml"
+      - "Taskfile.yml"
+      - ".github/workflows/validate.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -18,7 +25,7 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync
-      - run: uv run ruff check .
+      - run: uv run ruff check apps/python tests/python live_test
 
   type-check:
     runs-on: ubuntu-latest
@@ -29,7 +36,7 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync
-      - run: uv run mypy lib reports sync_server
+      - run: uv run mypy
 
   test-unit:
     runs-on: ubuntu-latest

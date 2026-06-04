@@ -1,0 +1,29 @@
+{
+  "latest_run_id": "2026-06-02T08-26-33Z",
+  "runs": [
+    {
+      "run_id": "2026-06-02T08-26-33Z",
+      "generated_at": "2026-06-02T08:59:26.633963+00:00",
+      "finding_count": 20,
+      "totals": {
+        "medium": 2,
+        "low": 18
+      },
+      "by_surface": {
+        "cli+ui-shared": 11,
+        "sync-internal": 2,
+        "ui": 7
+      },
+      "delta": {
+        "new": 20,
+        "resolved": 0,
+        "persisting": 0,
+        "regressed": 0
+      },
+      "dir": "security-report/runs/2026-06-02T08-26-33Z",
+      "final_assessment": "security-report/runs/2026-06-02T08-26-33Z/FINAL_ASSESSMENT.md",
+      "summary": "security-report/runs/2026-06-02T08-26-33Z/summary.json",
+      "llm_brief": "security-report/runs/2026-06-02T08-26-33Z/llm-brief.md"
+    }
+  ]
+}

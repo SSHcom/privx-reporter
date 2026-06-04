@@ -1,0 +1,12 @@
+#!/bin/bash
+# Dev implementation script for backup CLI (Stage 3 target: apps/python/backup_server/run).
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(realpath "$script_dir/../../../..")"
+cd "$repo_root"
+
+export REPORTER_BACKUP_DEV_MODE=1
+export PYTHONPATH="$repo_root/apps/python${PYTHONPATH:+:$PYTHONPATH}"
+uv run dotenv run -- python -m lib._backup.backup "$@"

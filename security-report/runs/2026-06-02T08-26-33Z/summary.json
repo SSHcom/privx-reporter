@@ -1,0 +1,28 @@
+{
+  "run_id": "2026-06-02T08-26-33Z",
+  "generated_at": "2026-06-02T08:59:26.633963+00:00",
+  "project": "reporter-privx-dev",
+  "totals": {
+    "medium": 2,
+    "low": 18
+  },
+  "by_surface": {
+    "cli+ui-shared": 11,
+    "sync-internal": 2,
+    "ui": 7
+  },
+  "finding_count": 20,
+  "delta": {
+    "new": 20,
+    "resolved": 0,
+    "persisting": 0,
+    "regressed": 0
+  },
+  "sbom": {
+    "run_id": "2026-06-02T08-26-33Z",
+    "cyclonedx": "security-report/runs/2026-06-02T08-26-33Z/sbom/cyclonedx.json",
+    "cyclonedx_sha256": "a63d183f4f5fb070c7f67240c039fceb4e2651b05bd474982d39d338ed140332",
+    "spdx": "security-report/runs/2026-06-02T08-26-33Z/sbom/spdx.json",
+    "spdx_sha256": "8d68d3a85da52a5a80219c2c28528e99e824c0c324e3b75bdbdb0221a946b706"
+  }
+}

@@ -15,7 +15,7 @@ Group-level help and description are defined in an optional `group.toml` file at
 Each report group has an optional `group.toml`, and each subcommand has its own `in.toml`:
 
 ```text
-reports/
+apps/python/reports/
 └── roles/
     ├── group.toml
     └── user/
@@ -70,8 +70,8 @@ help = "Enable verbose output"
 
 ## Loading and parsing flow
 
-1. `bin/combine_configs.sh` scans report TOML files (`group.toml`, `in.toml`, `out.toml`) and writes combined output to `reports/config.toml`.
-2. Reporter CLI loads combined config and parses commands/subcommands/options using `lib/_report/cli_parser.py`.
+1. `bin/combine_configs.sh` scans report TOML files (`group.toml`, `in.toml`, `out.toml`) and writes combined output to `apps/python/reports/config.toml`.
+2. Reporter CLI loads combined config and parses commands/subcommands/options using `apps/python/lib/_report/cli_parser.py`.
 3. Required argument rules are validated from TOML-driven config.
 4. Help output is generated from the same config (`-h` and `--help`).
 
@@ -132,18 +132,18 @@ help = "Filter by event name"
 
 `ui_list` does not change CLI parsing behavior. It only declares a list key to resolve.
 
-As a concrete example of list-handler usage, see `reports/events/query`.
+As a concrete example of list-handler usage, see `apps/python/reports/events/query`.
 
 To support a list key:
 
-1. Implement group-level route in `reports/<group>/__init__.py`:
+1. Implement group-level route in `apps/python/reports/<group>/__init__.py`:
    - `get_list(subcommand: str, list_key: str)`
    - `list_key` is an identifier string (for example `event_names`) that tells the list handler which value list to return. Using identifiers allows one handler to support multiple lists.
 
-2. Implement subcommand-level provider (for example `reports/<group>/<subcommand>/ui.py`):
+2. Implement subcommand-level provider (for example `apps/python/reports/<group>/<subcommand>/ui.py`):
    - `get_list(list_key: str)`
 
-Both return `UIListResponse` (`lib/_report/generator.py`) with:
+Both return `UIListResponse` (`apps/python/lib/_report/generator.py`) with:
 
 - `values`: list of strings
 - `error_message`: `None` on success, message on failure

@@ -1,0 +1,4 @@
+#!/bin/bash
+# Dev implementation script for admin CLI.
+
+uv run dotenv run -- admin "$@"

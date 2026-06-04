@@ -9,11 +9,8 @@ WORKDIR $REPORTER_HOME
 
 COPY pyproject.toml uv.lock ./
 COPY release/common/security.sh ./security.sh
-COPY lib/ lib/
-COPY reports/ reports/
-COPY administration/ administration/
-COPY ui/ ui/
-COPY sync_server/ sync_server/
+# Hatch force-include paths (pyproject.toml) live under apps/python/ during the wheel build.
+COPY apps/python/ apps/python/
 
 ENV UV_LINK_MODE=copy
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -21,7 +18,8 @@ ENV UV_CACHE_DIR=/tmp/uv-cache
 
 RUN uv sync --frozen --no-dev --no-editable \
     && sh ./security.sh \
-    && rm -rf /tmp/uv-cache
+    && rm -rf /tmp/uv-cache \
+    && for d in lib reports administration ui sync_server; do cp -r "apps/python/$d" "$d"; done
 
 FROM python:3.14-alpine
 
@@ -35,11 +33,11 @@ COPY --from=builder $REPORTER_HOME $REPORTER_HOME
 
 COPY release/reporter_cli/.env-example ./.env-example
 COPY release/reporter_cli/.env-example-distributed ./.env-example-distributed
-COPY backup_server/ backup_server/
+COPY apps/python/backup_server/ backup_server/
 COPY release/reporter_cli/docker-compose.yml ./
 COPY release/reporter_cli/Dockerfile-backup ./Dockerfile-backup
 COPY release/common/pg_ssl_entry_point.sh ./pg_ssl_entry_point.sh
-COPY bin/prod/create_env bin/prod/admin bin/prod/report bin/prod/post_install bin/prod/backup /installer/bin/
+COPY release/common/bin/create_env release/common/bin/admin release/common/bin/report release/common/bin/post_install release/common/bin/backup /installer/bin/
 COPY release/reporter_cli/instructions.txt /installer/instructions-standalone.txt
 COPY release/reporter_cli/instructions-distributed.txt /installer/instructions-distributed.txt
 COPY release/reporter_cli/install.sh /installer/install.sh

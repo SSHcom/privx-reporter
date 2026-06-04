@@ -4,12 +4,12 @@ This document describes the minimal wiring needed to add or maintain a report.
 
 It focuses on the execution contract between:
 
-- `reports/<group>/__init__.py`
-- `reports/<group>/<report>/report.py`
+- `apps/python/reports/<group>/__init__.py`
+- `apps/python/reports/<group>/<report>/report.py`
 
 This is intentionally a high-level guide. Internal helper patterns are covered in separate documents.
 
-## What `reports/<group>/__init__.py` does
+## What `apps/python/reports/<group>/__init__.py` does
 
 Each report group module acts as a group-level router.
 
@@ -17,10 +17,10 @@ Its responsibility is to:
 
 1. Receive the selected CLI command context from the report generator.
 2. Inspect the selected subcommand.
-3. Route execution to the matching report module in `reports/<group>/<report>/report.py`.
+3. Route execution to the matching report module in `apps/python/reports/<group>/<report>/report.py`.
 4. Return the report response back to the shared reporter flow.
 
-Using `roles` as an example, `reports/roles/__init__.py` routes subcommands such as `members`, `query`, `restrictions`, and `user` to their corresponding report modules.
+Using `roles` as an example, `apps/python/reports/roles/__init__.py` routes subcommands such as `members`, `query`, `restrictions`, and `user` to their corresponding report modules.
 
 ## Group handler signature
 
@@ -32,12 +32,12 @@ Parameter roles at a high level:
 
 - `api`: authenticated PrivX API client
 - `args`: parsed CLI arguments for the selected command/subcommand
-- `config`: combined reporter configuration (`reports/config.toml`)
+- `config`: combined reporter configuration (`apps/python/reports/config.toml`)
 - `user_group_id`: UI-specific access scope
 
 `user_group_id` is used by UI-driven execution to limit accessible data. Currently this is used to filter PrivX data related to specific access groups.
 
-## What to pass to `reports/<group>/<report>/report.py`
+## What to pass to `apps/python/reports/<group>/<report>/report.py`
 
 At minimum, the report function should receive:
 
@@ -53,7 +53,7 @@ The exact type names can vary by report, but the handoff pattern should stay con
 
 Report CLI arguments are not hardcoded in the parser.
 
-They are defined in report TOML files, combined into `reports/config.toml`, and parsed before the group handler runs. By the time `reports/<group>/__init__.py` is called, arguments are available through the parsed args namespace for the selected command/subcommand.
+They are defined in report TOML files, combined into `apps/python/reports/config.toml`, and parsed before the group handler runs. By the time `apps/python/reports/<group>/__init__.py` is called, arguments are available through the parsed args namespace for the selected command/subcommand.
 
 In practice, this means the group handler receives already-parsed CLI inputs and passes subcommand-specific inputs forward to the report module.
 
@@ -73,8 +73,8 @@ As long as this contract is respected, implementation details are up to the deve
 
 ```text
 CLI args (from combined config)
-  -> reports/<group>/__init__.py
-  -> reports/<group>/<report>/report.py
+  -> apps/python/reports/<group>/__init__.py
+  -> apps/python/reports/<group>/<report>/report.py
   -> {report_path, error_message, info_message}
 ```
 

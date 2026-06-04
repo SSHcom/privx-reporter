@@ -4,9 +4,9 @@ This document collects miscellaneous practical guidance for maintainable report 
 
 ## PrivX API usage in reports
 
-Reports can use the PrivX client directly (`api.<method>(...)`) or route calls through `lib/report_api`.
+Reports can use the PrivX client directly (`api.<method>(...)`) or route calls through `apps/python/lib/report_api`.
 
-For new report code, prefer `lib/report_api` wrappers first.
+For new report code, prefer `apps/python/lib/report_api` wrappers first.
 
 Why:
 
@@ -16,7 +16,7 @@ Why:
 
 Direct client usage is still valid for one-off calls, prototyping, or when no wrapper exists yet.
 
-When introducing a new PrivX query path, create a wrapper in `lib/report_api` instead of embedding repeated response/error handling in report modules.
+When introducing a new PrivX query path, create a wrapper in `apps/python/lib/report_api` instead of embedding repeated response/error handling in report modules.
 
 ## Choosing API vs database source
 
@@ -61,7 +61,7 @@ Design implications:
 - keep expensive joins/post-processing under control
 - decide deliberately whether the report should be visible in UI (configure using `ui_display` in `out.toml` file)
 
-`lib/report_api/connections.py`:`search_connections(...)` is a good reference pattern for offset/limit paging with shared error handling.
+`apps/python/lib/report_api/connections.py`:`search_connections(...)` is a good reference pattern for offset/limit paging with shared error handling.
 
 ## Performance defaults and guardrails
 

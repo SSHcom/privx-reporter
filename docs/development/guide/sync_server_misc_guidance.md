@@ -27,7 +27,7 @@ For long-term maintainability:
 
 When building source fetch logic:
 
-- prefer existing `lib/report_api` wrappers where available
+- prefer existing `apps/python/lib/report_api` wrappers where available
 - if a new PrivX call pattern is reused, add a wrapper instead of repeating response/error handling
 - keep normalization close to fetch/transform code so behavior is easy to review
 

@@ -19,29 +19,29 @@ UI runtime starts with:
 
 1. `bin/serve_ui`
 2. `ui.bootstrap.main()` for DB/bootstrap work
-3. `streamlit run ui/app.py`
+3. `streamlit run app.py` from `apps/python/ui/`
 
-`ui/app.py` initializes session state and routes users to:
+`apps/python/ui/app.py` initializes session state and routes users to:
 
 - `pages/_1_Home.py` when authenticated
 - `pages/_0_Login.py` otherwise
 
 ## Core Directory Map
 
-- `ui/app.py`
+- `apps/python/ui/app.py`
   - runtime entry router
-- `ui/pages/`
+- `apps/python/ui/pages/`
   - Streamlit page entrypoints
   - page discovery is flat under this directory (nesting is not supported)
-- `ui/components/`
+- `apps/python/ui/components/`
   - reusable UI rendering units (report forms/results, sidebar, widgets)
-- `ui/views/`
+- `apps/python/ui/views/`
   - larger view logic that would make page files too heavy
-- `ui/services/`
+- `apps/python/ui/services/`
   - orchestration and runtime helpers (report execution, session, auth, config, permissions)
-- `ui/db/`
+- `apps/python/ui/db/`
   - admin DB query and sync modules used by UI/admin pages and bootstrap
-- `ui/custom/`
+- `apps/python/ui/custom/`
   - custom Streamlit component wrappers (cookie handling)
 
 ## UI Request Mental Model
@@ -56,7 +56,7 @@ user action in Streamlit page
 
 ## Report Execution Boundary
 
-UI report execution is built around `ui/services/report_service.py`:
+UI report execution is built around `apps/python/ui/services/report_service.py`:
 
 1. Access check (`can_access_report`) based on user-group mappings.
 2. Form values mapped into `argparse.Namespace`.
@@ -64,7 +64,7 @@ UI report execution is built around `ui/services/report_service.py`:
 4. Output path scoped to `<REPORT_OUT_DIR>/<group>/<username>`.
 5. UI reads generated CSV/JSON for display.
 
-This keeps report business logic in `reports/` and UI orchestration in `ui/`.
+This keeps report business logic in `apps/python/reports/` and UI orchestration in `apps/python/ui/`.
 
 ## Authorization Boundary
 
@@ -80,8 +80,8 @@ Two separate checks are important:
 ## Development Conventions
 
 - Keep page files thin; push reusable logic into `services/`, `components/`, or `views/`.
-- Use `ui/services/page_bootstrap.py` (`setup_page`) for shared page initialization.
-- Use session keys from `ui/services/session/keys.py`, not ad-hoc literal keys.
+- Use `apps/python/ui/services/page_bootstrap.py` (`setup_page`) for shared page initialization.
+- Use session keys from `apps/python/ui/services/session/keys.py`, not ad-hoc literal keys.
 - Keep new behavior aligned with existing report/permission/session contracts.
 
 ## Dashboard Scope Note

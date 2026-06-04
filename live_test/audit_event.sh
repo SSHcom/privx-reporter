@@ -9,8 +9,9 @@ fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/env.sh"
+"$SCRIPT_DIR/verify_test_db.sh"
 
-uv run sync-server-live-test \
+uv run --no-env-file sync-server-live-test \
   --source audit \
   --records "$1" \
   --api-delay-ms "$2"

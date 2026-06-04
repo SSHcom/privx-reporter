@@ -5,6 +5,8 @@ docker-compose*.yml
 # Keep only release files required by install/build paths
 release/**
 !release/common/
+!release/common/bin/
+!release/common/bin/*
 !release/common/pg_ssl_entry_point.sh
 !release/common/security.sh
 !release/reporter_cli/
@@ -19,9 +21,15 @@ release/**
 
 ui/custom/cookie/frontend/node_modules/
 
+# Monorepo apps (Python sources required by release Dockerfiles)
+!apps/
+!apps/python/
+!apps/python/**
+
 # Dev tooling and docs
 .git/
 .cursor/
+.backup/
 tests/
 docs/
 openspec/

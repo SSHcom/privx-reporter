@@ -15,22 +15,22 @@ Starting points:
 
 - **Reporter CLI** -  Runs report commands and generates report output.
   - Command: `bin/report`
-  - Implementation: `reports/`
+  - Implementation: `apps/python/reports/`
 
 - **UI** - Web interface for running available reports.
   - Command: `bin/serve_ui`
-  - Implementation: `ui/`
+  - Implementation: `apps/python/ui/`
 
 - **Sync Server** - Populates audit and connection data in the data database on a schedule.
   - Command: `bin/serve_sync`
-  - Implementation: `sync_server/`
+  - Implementation: `apps/python/sync_server/`
 
 - **Admin CLI** - Administrative commands for database migrations, sync server back-fills, etc.
   - Command:  `bin/admin`
-  - Implementation: `administration/`
+  - Implementation: `apps/python/administration/`
   
 - **Shared library** - Common functionality used by CLI, UI, and sync server.
-  - Implementation: `lib/`
+  - Implementation: `apps/python/lib/`
 
 > **Executing commands**: When running directly from the repository use `bin/<command>`. In production, `serve_ui` and `serve_sync` would typically be run as containerized services.
 

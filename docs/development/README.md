@@ -17,26 +17,35 @@ For focused implementation guides, start with `[DEVELOPMENT_GUIDE.md](DEVELOPMEN
 
 ## Project Structure
 
+Python application code lives under `apps/python/`. Root `bin/*` are thin forwarders to component `run` scripts (see [Command entrypoints and bin contract](#command-entrypoints-and-bin-contract)). `uv` editable installs add `apps/python/` to the import path (`pyproject.toml` `dev-mode-dirs`); production images flatten the same packages to `/opt/reporter/lib/`, `reports/`, etc.
+
 ```
- ├── lib/                         # Shared code library
- │   ├── clients/                 # Client initialization (privx, database)
- │   ├── report_api/              # PrivX API calls
- │   ├── utils/                   # Various utils/helpers
- │   ├── _report/                 # Reporter CLI entry point and routing
- │   └── _admin/                  # Administration CLI entry point and routing
+ ├── apps/python/
+ │   ├── lib/                     # Shared code library
+ │   │   ├── clients/             # Client initialization (privx, database)
+ │   │   ├── report_api/          # PrivX API calls
+ │   │   ├── utils/               # Various utils/helpers
+ │   │   ├── _report/             # Reporter CLI entry point and routing
+ │   │   ├── _admin/              # Administration CLI entry point and routing
+ │   │   ├── _backup/             # Backup CLI (+ run)
+ │   │   └── interactive/env/     # create-env helper (+ run)
+ │   ├── reports/                 # Report implementations (+ run)
+ │   │   └── config.toml          # Combined CLI configuration (generated)
+ │   ├── administration/          # Administration modules (+ run)
+ │   │   └── config.toml          # Combined CLI configuration (generated)
+ │   ├── sync_server/             # Sync server (+ run)
+ │   ├── backup_server/           # Backup daemon
+ │   └── ui/                      # Streamlit UI (+ run)
  │
- ├── sync_server/                 # Sync server that syncs time-series data to a database
- │   └── main.py                  # Main server entry point
- │
- ├── reports/                     # Report implementations
- │   ├── roles/                   # Role-related reports
- │   ├── connections/             # Connection reports
- │   ├── access/                  # Access-related reports
- │   └── config.toml              # Combined CLI configuration (generated)
- │
- ├── administration/              # Administration modules (CLI-first, UI-planned)
- │   └── config.toml              # Combined CLI configuration (generated)
+ ├── bin/                         # Stable dev/CI wrappers (forwarders only)
+ ├── tests/python/                # Mirrors apps/python layout (lib, reports, ui, …)
+ ├── release/common/bin/          # Install-only scripts
+ └── pyproject.toml               # Root project (uv run / hatch build)
 ```
+
+Root `bin/*` names and arguments stay stable; forwarders `exec` into `apps/python/…/run`.
+
+Future Go components live under `apps/go/`; production keeps flat Python at `/opt/reporter` and ships Go as binaries or containers. See [`Golang-notes.md`](../../Golang-notes.md) and [`apps/README.md`](../../apps/README.md).
 
 ## Read This First (Common Pitfalls)
 
@@ -89,7 +98,7 @@ This project uses [pytest](https://pytest.org/) for unit testing.
 You can also run pytest directly:
 
 ```bash
-uv run pytest tests/lib/utils/       # Run tests in a specific directory
+uv run pytest tests/python/lib/utils/       # Run tests in a specific directory
 uv run pytest -k test_string         # Run tests matching a pattern
 uv run pytest -m unit                # Run only unit tests
 uv run pytest -m integration         # Run only integration tests
@@ -101,7 +110,7 @@ uv run pytest -v                     # Verbose output
 The test directory structure mirrors the source code structure:
 
 ```
-tests/
+tests/python/
  ├── lib/
  │   ├── utils/
  │   │   ├── test_csv_writer.py
@@ -114,7 +123,7 @@ tests/
 
 - Test files should be named `test_*.py` or `*_test.py`
 - Test functions should start with `test_`
-- Place test files in the corresponding directory structure under `tests/`
+- Place test files in the corresponding directory structure under `tests/python/`
 - Use pytest fixtures for setup/teardown and shared test data
 - Mark tests with `@pytest.mark.unit` or `@pytest.mark.integration` as appropriate
 
@@ -135,12 +144,27 @@ Use [QUICK_START.md](QUICK_START.md) as the canonical step-by-step setup and run
 
 This document intentionally stays descriptive and focuses on conventions and structure.
 
-### Command entry points
+### Command entrypoints and bin contract
 
-- CLI reporter: `bin/report <arguments>`
-- CLI administration: `bin/admin <arguments>`
-- Sync server: `bin/serve_sync`
-- UI server: `bin/serve_ui`
+**Use root `bin/*` in a repository checkout** (dev and CI). Do not call component `run` scripts directly unless you are working on the wrapper layer itself.
+
+| Command | Wrapper | Implementation |
+| --- | --- | --- |
+| Report CLI | `bin/report` | `apps/python/reports/run` |
+| Admin CLI | `bin/admin` | `apps/python/administration/run` |
+| Backup CLI | `bin/backup` | `apps/python/lib/_backup/run` |
+| Backup server | `bin/serve_backup` | `apps/python/backup_server/run` |
+| Sync server | `bin/serve_sync` | `apps/python/sync_server/run` |
+| UI server | `bin/serve_ui` | `apps/python/ui/run` |
+| Create `.env` | `bin/create_env` | `apps/python/lib/interactive/env/run` |
+
+**Bin contract rules:**
+
+- Root `bin/*` are tiny forwarders and stay stable (same names, same arguments).
+- Forwarders pass all arguments transparently via `exec ... "$@"`.
+- Root `bin/*` are for dev and CI invocation in a repo checkout only.
+- Install-only scripts live under [`release/common/bin/`](../../release/common/bin/README.md); packaging docs and Dockerfiles reference those paths, not root `bin/`.
+- [`pyproject.toml`](../../pyproject.toml) stays at repository root so `uv run ...` behavior remains unchanged.
 
 Production-oriented examples are documented in [release/README.md](../release/README.md).
 
@@ -156,20 +180,20 @@ When you modify report or administration command configuration files, regenerate
 
 Relevant source files:
 
-- Report `group.toml` files (`reports/<group>/group.toml`)
-- Report `in.toml` or `out.toml` files (`reports/<group>/<report>/in.toml`)
-- Administration `group.toml` files (`administration/<group>/group.toml`)
-- Administration `in.toml` files (`administration/<group>/<module>/in.toml`)
+- Report `group.toml` files (`apps/python/reports/<group>/group.toml`)
+- Report `in.toml` or `out.toml` files (`apps/python/reports/<group>/<report>/in.toml`)
+- Administration `group.toml` files (`apps/python/administration/<group>/group.toml`)
+- Administration `in.toml` files (`apps/python/administration/<group>/<module>/in.toml`)
 
 Generated outputs:
 
-- `reports/config.toml`
-- `administration/config.toml`
+- `apps/python/reports/config.toml`
+- `apps/python/administration/config.toml`
 
 Without regeneration, command metadata changes are not applied and related CLI/UI behavior can break.
 
 ### Administration metadata consistency
 
-Administration modules are currently CLI-driven (`bin/admin ...`) and are expected to become callable from the UI. At the moment, administration commands primarily manage which audit events are enabled for sync. Keep administration module metadata (`in.toml`) and module layout (`administration/<group>/<module>/module.py`) consistent so UI integration can rely on the same source metadata.
+Administration modules are currently CLI-driven (`bin/admin ...`) and are expected to become callable from the UI. At the moment, administration commands primarily manage which audit events are enabled for sync. Keep administration module metadata (`in.toml`) and module layout (`apps/python/administration/<group>/<module>/module.py`) consistent so UI integration can rely on the same source metadata.
 
 See [Administration Operational Guide](../operations/CLI_ADMIN_GUIDE.md) for current command usage, data files, and extension conventions.

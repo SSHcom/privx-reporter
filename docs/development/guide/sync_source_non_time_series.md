@@ -4,8 +4,8 @@ This guide explains how to add sync sources that do **not** use the time-series 
 
 In this repository, current examples are:
 
-- `trends` (`lib/database/sync/trend.py`)
-- `concurrent` (`lib/database/sync/concurrent.py`)
+- `trends` (`apps/python/lib/database/sync/trend.py`)
+- `concurrent` (`apps/python/lib/database/sync/concurrent.py`)
 
 `concurrent` is the source name for **concurrent usage statistics** (active sessions and active connections). It is a data category, not a sync algorithm type.
 
@@ -36,30 +36,30 @@ Before starting implementation:
 
 - This project stores sync data in PostgreSQL with the TimescaleDB extension.
 - If you are new to TimescaleDB, read the basics first (hypertables, retention, indexing).
-- Review existing migrations in `administration/migration/_files/` to see the established pattern for creating sync tables and applying TimescaleDB-specific setup.
+- Review existing migrations in `apps/python/administration/migration/_files/` to see the established pattern for creating sync tables and applying TimescaleDB-specific setup.
 
-1. **Create table model** in `lib/database/models/sync/`.
+1. **Create table model** in `apps/python/lib/database/models/sync/`.
    - For this path, the common shape is:
      - `timestamp` as primary key
      - `data` JSONB payload
-2. **Create migration** in `administration/migration/_files/`.
+2. **Create migration** in `apps/python/administration/migration/_files/`.
    - Create table, add indexes if needed, and define retention policy if required.
-3. **Implement sync module** in `lib/database/sync/`.
+3. **Implement sync module** in `apps/python/lib/database/sync/`.
    - Build one public sync function (for example `sync_my_source(api)`).
    - Fetch PrivX data and normalize to one payload shape.
    - Insert/upsert into the data database.
-4. **Define source constant/config** in `lib/env_sync.py`.
+4. **Define source constant/config** in `apps/python/lib/env_sync.py`.
    - Add `<source>_SOURCE` name constant used by `SYNC_SOURCES`.
    - Add extra env variables only when source scheduling needs them.
-5. **Register source in server loop** in `sync_server/main.py`.
+5. **Register source in server loop** in `apps/python/sync_server/main.py`.
    - Add source to supported-source validation.
    - Add source scheduling branch (thread, interval, or daily gate).
-6. **Add tests** for scheduling and sync logic.
+6. **Add tests** under `tests/python/` (mirror the sync package layout) for scheduling and sync logic.
 7. **Update docs** (`DEVELOPMENT_GUIDE.md`, operations docs, etc if env/runtime changed).
 
 ## Minimal registration example
 
-Small example from source validation in `sync_server/main.py`:
+Small example from source validation in `apps/python/sync_server/main.py`:
 
 ```python
 if source not in (
@@ -76,7 +76,7 @@ Adding a new source means extending both this validation and the dispatch/schedu
 ## Practical guardrails
 
 - Keep payload keys stable over time for UI/report consumers.
-- Prefer wrapper usage through `lib/report_api` when adding repeated PrivX call patterns.
+- Prefer wrapper usage through `apps/python/lib/report_api` when adding repeated PrivX call patterns.
 - Avoid drifting into time-series complexity; if you need windowing and deep pagination, switch to the time-series path.
 
 ## Links

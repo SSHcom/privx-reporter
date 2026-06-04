@@ -9,11 +9,8 @@ WORKDIR $REPORTER_HOME
 
 COPY pyproject.toml uv.lock ./
 COPY release/common/security.sh ./security.sh
-COPY administration/ administration/
-COPY bin/ bin/
-COPY lib/ lib/
-COPY reports/ reports/
-COPY ui/ ui/
+COPY apps/python/ apps/python/
+COPY release/common/bin/ui bin/
 COPY release/reporter_ui/certs/ certs/
 
 ENV UV_LINK_MODE=copy
@@ -22,7 +19,8 @@ ENV UV_CACHE_DIR=/tmp/uv-cache
 
 RUN uv sync --frozen --no-dev --no-editable \
     && sh ./security.sh \
-    && rm -rf /tmp/uv-cache
+    && rm -rf /tmp/uv-cache \
+    && for d in lib reports administration ui; do cp -r "apps/python/$d" "$d"; done
 
 FROM python:3.14-alpine
 
@@ -35,6 +33,6 @@ WORKDIR $REPORTER_HOME
 
 COPY --from=builder $REPORTER_HOME $REPORTER_HOME
 
-RUN ln -s $REPORTER_HOME/bin/prod/ui /usr/local/bin/reporter-ui
+RUN ln -s $REPORTER_HOME/bin/ui /usr/local/bin/reporter-ui
 
 CMD ["reporter-ui", "--no-dotenv"]

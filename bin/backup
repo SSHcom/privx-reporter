@@ -1,8 +1,9 @@
 #!/bin/bash
+# Stable dev entrypoint. Implementation: apps/python/lib/_backup/run (Stage 3: apps/python/backup_server/run).
+
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(realpath "$script_dir/..")"
-cd "$repo_root"
 
-uv run dotenv run -- python -m lib._backup.backup "$@"
+exec "$repo_root/apps/python/lib/_backup/run" "$@"

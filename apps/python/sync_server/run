@@ -1,0 +1,4 @@
+#!/bin/bash
+# Dev implementation script for sync server.
+
+uv run dotenv run sync-server "$@"

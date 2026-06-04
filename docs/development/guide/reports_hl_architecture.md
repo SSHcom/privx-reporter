@@ -8,23 +8,23 @@ It intentionally stays at architecture level and avoids code-level details.
 
 At runtime, report execution follows this path:
 
-1. The user runs `bin/report` (or `bin/prod/report` in packaged environments).
-2. The CLI entrypoint invokes `lib/_report/main.py`.
-3. The main flow loads `reports/config.toml` and parses CLI arguments against that combined configuration.
-4. Based on the parsed command and subcommand, the reporter resolves the target report group and report module under `reports/`.
+1. The user runs `bin/report` (or `release/common/bin/report` copied to `$INSTALL_DIR/bin/report` in packaged environments).
+2. The CLI entrypoint invokes `apps/python/lib/_report/main.py`.
+3. The main flow loads `apps/python/reports/config.toml` and parses CLI arguments against that combined configuration.
+4. Based on the parsed command and subcommand, the reporter resolves the target report group and report module under `apps/python/reports/`.
 5. The selected report implementation runs and produces output.
 
 ## Configuration model
 
 Report definitions are distributed and then combined:
 
-- `reports/<report-group>/group.toml` provides group-level command metadata.
-- `reports/<report-group>/<report>/in.toml` provides input/CLI argument metadata for an individual report.
-- `reports/<report-group>/<report>/out.toml` provides output-field metadata for an individual report.
+- `apps/python/reports/<report-group>/group.toml` provides group-level command metadata.
+- `apps/python/reports/<report-group>/<report>/in.toml` provides input/CLI argument metadata for an individual report.
+- `apps/python/reports/<report-group>/<report>/out.toml` provides output-field metadata for an individual report.
 
 These files are combined into a single runtime configuration file:
 
-- `reports/config.toml`
+- `apps/python/reports/config.toml`
 
 The combine step is executed by:
 
@@ -38,12 +38,12 @@ That combined file is the source used by the reporter for CLI argument parsing a
 User
   |
   v
-bin/report or bin/prod/report
+bin/report (dev) or install `bin/report` from packaging
   |
   v
-lib/_report/main.py
+apps/python/lib/_report/main.py
   |
-  +--> load and parse reports/config.toml
+  +--> load and parse apps/python/reports/config.toml
   |         ^
   |         |
   |   task combine-configs
@@ -51,10 +51,11 @@ lib/_report/main.py
   |   +-----+------------------------------+
   |   |                                    |
   |   v                                    v
-  | reports/<group>/group.toml      reports/<group>/<report>/{in.toml,out.toml}
+  | apps/python/reports/<group>/group.toml
+  |     apps/python/reports/<group>/<report>/{in.toml,out.toml}
   |
   v
-reports/<group>/<report>/report.py
+apps/python/reports/<group>/<report>/report.py
   |
   v
 report output

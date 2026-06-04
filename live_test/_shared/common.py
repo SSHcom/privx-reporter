@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -11,6 +12,7 @@ from sqlalchemy import text
 
 from lib.clients.postgresql import use_database
 import lib.database.db_init as db_init
+from live_test._shared.db_env import apply_live_test_db_env
 
 if TYPE_CHECKING:
     from lib.env_sync import SyncConfig, SyncSourceConfig
@@ -21,6 +23,8 @@ CONNECTION_SAMPLE_PATH = SAMPLES_DIR / "connection.json"
 
 TEST_DATA_AGE_DAYS = 365 * 5
 TEST_RUN_ID_FIELD = "live_test_run_id"
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -97,8 +101,26 @@ def resolve_source_config(config: SyncConfig, source: str) -> SyncSourceConfig:
     return source_config
 
 
+def log_db_targets() -> None:
+    """Log resolved admin/data connection targets (same physical DB in live tests)."""
+    from lib.env import EnvConfig
+
+    for role, config in EnvConfig.get_db_config().items():
+        logger.info(
+            "DB target %s: %s@%s:%s/%s ssl=%s",
+            role,
+            config["user"],
+            config["host"],
+            config["port"],
+            config["name"],
+            "on" if config["ssl"] else "off",
+        )
+
+
 def init_data_tables(config: SyncConfig) -> None:
     _ = config
+    apply_live_test_db_env()
+    log_db_targets()
     db_init.init_databases()
 
 

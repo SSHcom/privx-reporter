@@ -10,7 +10,15 @@ This directory contains local test scripts for `sync_server` insert paths.
 
 ## Quick Start
 
-Before running live tests, start the test database: `docker compose -f docker-compose-test.yml up`.
+Before running live tests, start the test database: `docker compose -f docker-compose-test.yml up -d`.
+
+The harness uses **one** Postgres database (`reporter_test` on port `5446`) for both logical `admin` and `data` connections. Those settings are hardcoded in `live_test/_shared/db_env.py` (not read from `.env`). Shell scripts run `uv` with `--no-env-file` so project `.env` cannot override them.
+
+If the container was created before `POSTGRES_DB: reporter_test` was set, create the database once:
+
+```bash
+./setup_test_db.sh
+```
 
 Run from `live_test/`:
 
@@ -125,7 +133,7 @@ Per source, it:
 
 The script prints boxed summary sections per source, followed by an overall run summary with begin/end time and PASS/FAIL result.
 
-All scripts load environment variables from `live_test/env.sh`.
+Scripts source `live_test/env.sh` for sync tuning only. Database connection settings come from `live_test/_shared/db_env.py` and match in `../docker-compose-test.yml`.
 
 ## How Input Data Works
 
@@ -156,14 +164,12 @@ If these are missing, sync logic may skip or fail records.
 
 ## Environment Variables for Test Scenarios
 
-The load runner uses the same env wiring as sync server. Defaults are defined in `live_test/env.sh`. Useful knobs:
+Sync-related defaults are in `live_test/env.sh`. Database host/port/name are fixed in `live_test/_shared/db_env.py` (aligned with `docker-compose-test.yml`). Useful sync knobs:
 
 - `SYNC_BATCH_SIZE`: records fetched per simulated API page.
 - `SYNC_MAX_RANGE_HOURS`: sync range clamp (mainly affects sync window behavior/logging).
 - `SYNC_CONNECTION`: `<interval>,<range_minutes>,<retention_days>`.
 - `SYNC_AUDIT`: `<interval>,<range_minutes>,<retention_days>`.
-- `DB_DATA_*`: target data DB for inserts.
-- `DB_DATA_SSL_MODE`: SSL on/off for DB connection.
 
 Example scenario tuning in `live_test/env.sh`:
 

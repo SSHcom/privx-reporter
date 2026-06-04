@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from time import perf_counter
 from uuid import uuid4
 
+from live_test._shared.db_env import apply_live_test_db_env
 from lib.env_sync import SyncConfig
 from live_test._shared.common import RunMetrics, cleanup_run_data, init_data_tables, parse_args, resolve_source_config
 from live_test.audit_event.runner import run as run_audit_event
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> None:
+    apply_live_test_db_env()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     args = parse_args()
     run_id = str(uuid4())

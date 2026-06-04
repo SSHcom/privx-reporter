@@ -1,6 +1,9 @@
 #!/bin/bash
+# Stable dev entrypoint. Implementation: apps/python/ui/run.
+
 set -euo pipefail
 
-uv run dotenv -f .env run -- python -c "from ui.bootstrap import main; main()"
-cd ui
-uv run dotenv -f ../.env run -- streamlit run app.py --browser.gatherUsageStats false "$@"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(realpath "$script_dir/..")"
+
+exec "$repo_root/apps/python/ui/run" "$@"

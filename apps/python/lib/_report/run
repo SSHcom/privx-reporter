@@ -1,0 +1,15 @@
+#!/bin/bash
+# Dev implementation script for report CLI (Stage 3 target: apps/python/reports/run).
+
+# Don't add empty lines if outputting to stdout
+# List commands output to stdout by default (unless --to-file is used)
+# Other commands output to file by default (unless --to-stdout is used)
+if [[ " $* " == *" --to-stdout "* ]] || [[ " $* " == *" list "* && " $* " != *" --to-file "* ]]; then
+  # Outputting to stdout - don't add empty lines
+  uv run dotenv run -- report "$@"
+else
+  # Outputting to file - add empty lines for better terminal formatting
+  echo ""
+  uv run dotenv run -- report "$@"
+  echo ""
+fi

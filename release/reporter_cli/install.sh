@@ -39,12 +39,28 @@ chmod 755 "$INSTALL_DIR/security.sh"
 cp -a "$REPORTER_HOME/lib" "$INSTALL_DIR/lib"
 cp -a "$REPORTER_HOME/reports" "$INSTALL_DIR/reports"
 cp -a "$REPORTER_HOME/administration" "$INSTALL_DIR/administration"
+# post_install runs `uv sync`; hatch force-include paths in pyproject.toml are under apps/python/.
+mkdir -p "$INSTALL_DIR/apps/python"
+for d in lib reports administration sync_server backup_server; do
+  if [ -d "$REPORTER_HOME/apps/python/$d" ]; then
+    cp -a "$REPORTER_HOME/apps/python/$d" "$INSTALL_DIR/apps/python/"
+  elif [ -d "$REPORTER_HOME/$d" ]; then
+    cp -a "$REPORTER_HOME/$d" "$INSTALL_DIR/apps/python/"
+  fi
+done
 cp -a /installer/bin/. "$INSTALL_DIR/bin/"
 chmod +x "$INSTALL_DIR/bin/backup"
+
+version="$(awk -F'"' '/^version = / { print $2; exit }' "$REPORTER_HOME/pyproject.toml")"
+if [ -z "$version" ]; then
+  echo "FATAL: could not read version from $REPORTER_HOME/pyproject.toml" >&2
+  exit 1
+fi
 
 {
   echo "install=$install_type"
   echo "install_dir=/opt/reporter"
+  echo "version=$version"
 } > "$INSTALL_DIR/.info"
 
 if [ "$install_type" = "standalone" ]; then

@@ -24,7 +24,7 @@ Use this group to manage schema migrations for both databases: `admin` and `data
 admin migration up
 ```
 
-- Applies all pending migration files from `administration/migration/_files`.
+- Applies all pending migration files from `administration/migration/_files` (under `REPORTER_HOME` when installed; `apps/python/administration/migration/_files` in a repo checkout).
 - One migration file may contain SQL for `admin tables`, `data tables`, or both.
 
 **Note:** The sync server and reporter UI automatically applies latest migrations on startup.
@@ -57,7 +57,7 @@ admin migration down --steps 2
 
 ## Migration file contract
 
-Each migration file in `administration/migration/_files` must define:
+Each migration file in `administration/migration/_files` (installed layout) or `apps/python/administration/migration/_files` (repo checkout) must define:
 
 - `up() -> dict[str, list[str]]`
 - `down() -> dict[str, list[str]]`
@@ -68,7 +68,7 @@ In both dicts, the key is the database target (`"admin"` or `"data"`), and the l
 
 This repository includes a dedicated database test that validates SQLAlchemy table contracts against the live migrated schema:
 
-- Test file: `tests/lib/database/models/test_schema_parity.py`
+- Test file: `tests/python/lib/database/models/test_schema_parity.py`
 - Marker: `database`
 - Task command: `task test-database`
 
@@ -101,8 +101,8 @@ task test-database
 
 Run `task test-database` after any change to:
 
-- Migration SQL (`administration/migration/_files`)
-- SQLAlchemy table models (`lib/database/models/`)
+- Migration SQL (`apps/python/administration/migration/_files` in a repo checkout; `administration/migration/_files` under `REPORTER_HOME` when installed)
+- SQLAlchemy table models (`apps/python/lib/database/models/` in a repo checkout; `lib/database/models/` under `REPORTER_HOME` when installed)
 
 Reason: migrations define runtime database structure, while model tables define the query contract used by code. If they drift, failures usually show up later at runtime (missing columns, wrong nullability, type mismatches, broken PK assumptions). The parity test catches this drift immediately in a controlled DB before deployment.
 
