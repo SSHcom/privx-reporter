@@ -1,6 +1,6 @@
 [project]
 name = "reporter-privx-dev"
-version = "1.0.2"
+version = "1.1.1"
 description = "PrivX reporting service with PostgreSQL (TimescaleDB) sync"
 requires-python = ">=3.13"
 dependencies = [
