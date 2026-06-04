@@ -1,0 +1,4 @@
+#!/bin/bash
+# Dev implementation script for backup server.
+
+uv run dotenv run backup-server "$@"

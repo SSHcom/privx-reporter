@@ -1,0 +1,16 @@
+# Intermediate scan artefacts per run (RUN_ID = 20xx-xx-xxTxx-xx-xxZ).
+# Main deliverables in version control: FINAL_ASSESSMENT.md, summary.json, llm-brief.md (same directory).
+
+# Tool output directories
+20[0-9][0-9]-*/sast/
+20[0-9][0-9]-*/sca/
+20[0-9][0-9]-*/secrets/
+20[0-9][0-9]-*/iac/
+20[0-9][0-9]-*/containers/
+20[0-9][0-9]-*/sbom/
+
+# Normalized / agent scratch (regenerated each run)
+20[0-9][0-9]-*/findings.json
+20[0-9][0-9]-*/baseline.json
+20[0-9][0-9]-*/baseline.previous.json
+20[0-9][0-9]-*/_meta.json

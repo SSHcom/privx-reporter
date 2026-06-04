@@ -15,7 +15,7 @@ The same field selection applies to both CSV and JSON output because report rows
 Each report subcommand has its own `out.toml`:
 
 ```text
-reports/
+apps/python/reports/
 └── roles/
     ├── group.toml
     └── members/
@@ -24,7 +24,7 @@ reports/
         └── out.toml
 ```
 
-All `out.toml` files are merged into `reports/config.toml` together with matching `in.toml` files, using hierarchical TOML names.
+All `out.toml` files are merged into `apps/python/reports/config.toml` together with matching `in.toml` files, using hierarchical TOML names.
 
 ## `out.toml` format
 

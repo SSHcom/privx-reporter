@@ -1,2 +1,9 @@
 #!/bin/bash
-uv run dotenv run -- admin "$@"
+# Stable dev entrypoint. Implementation: apps/python/administration/run.
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(realpath "$script_dir/..")"
+
+exec "$repo_root/apps/python/administration/run" "$@"

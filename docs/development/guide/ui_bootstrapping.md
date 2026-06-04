@@ -7,19 +7,19 @@ This document describes the startup wiring for the UI process before normal page
 UI startup is driven by `bin/serve_ui`:
 
 1. Run `ui.bootstrap.main()` (Python one-shot bootstrap phase).
-2. Change working directory to `ui/`.
-3. Start Streamlit with `streamlit run app.py`.
+2. Change working directory to `apps/python/ui/`.
+3. Start Streamlit with `streamlit run app.py` (from that directory).
 
 This split is important: database/bootstrap sync runs before Streamlit serves requests.
 
 ## What Bootstrap Does
 
-`ui/bootstrap.py` performs:
+`apps/python/ui/bootstrap.py` performs:
 
 1. `init_databases()`
    - initializes DB layer and migrations needed by runtime
 2. `sync_reports_from_config()`
-   - synchronizes report metadata from `reports/config.toml`
+   - synchronizes report metadata from `apps/python/reports/config.toml`
    - prunes stale/orphan mappings
 3. `sync_admin_group()`
    - ensures `admin` user group exists
@@ -33,7 +33,7 @@ This split is important: database/bootstrap sync runs before Streamlit serves re
 
 Without bootstrap synchronization:
 
-- report lists and report-group mappings in admin DB can drift from `reports/config.toml`,
+- report lists and report-group mappings in admin DB can drift from `apps/python/reports/config.toml`,
 - required default groups/users may be missing,
 - admin pages and UI access checks can fail or behave inconsistently.
 
@@ -42,15 +42,15 @@ Without bootstrap synchronization:
 Primary files to inspect when changing startup behavior:
 
 - `bin/serve_ui`
-- `ui/bootstrap.py`
-- `ui/db/init/report_sync.py`
-- `ui/db/init/admin_sync.py`
+- `apps/python/ui/bootstrap.py`
+- `apps/python/ui/db/init/report_sync.py`
+- `apps/python/ui/db/init/admin_sync.py`
 
 ## Report Config Source
 
 UI runtime and bootstrap both depend on combined report config:
 
-- `reports/config.toml` (generated from report TOML files)
+- `apps/python/reports/config.toml` (generated from report TOML files)
 
 If you add/remove reports, ensure combined config (run `task combine-configs`) is regenerated before validating UI behavior.
 
@@ -74,7 +74,7 @@ bin/serve_ui
   -> ui.bootstrap.main()
       -> init_databases()
       -> sync report metadata + default groups/users
-  -> streamlit run ui/app.py
+  -> streamlit run apps/python/ui/app.py
 ```
 
 ## Links

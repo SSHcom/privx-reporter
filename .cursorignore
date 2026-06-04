@@ -1,6 +1,2 @@
 /.env
-/.env-aws
-/.env-local
-/.env-ssh-demo
-/.env-ukm
-/passwords-delete-me.txt
+/.env-files

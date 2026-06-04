@@ -6,8 +6,8 @@ This document describes the minimal wiring needed to understand and extend sync 
 
 Sync server startup has following stages:
 
-1. **Enter sync runtime** through `sync_server/main.py` (`main()`).
-2. **Load config** from environment with `SyncConfig` (`lib/env_sync.py`).
+1. **Enter sync runtime** through `apps/python/sync_server/main.py` (`main()`).
+2. **Load config** from environment with `SyncConfig` (`apps/python/lib/env_sync.py`).
 3. **Initialize databases** with `init_databases()` (connections, migrations, bootstrap tasks).
 4. **Create PrivX client** with `get_privx_client()`.
 5. **Start schedulers**:
@@ -20,7 +20,7 @@ If one source sync fails during a loop iteration, the server logs the error and 
 
 - `audit` and `connection`:
   - interval-driven using per-source `minutes` config
-  - sync calls route through `lib/database/sync/__init__.py`
+  - sync calls route through `apps/python/lib/database/sync/__init__.py`
 - `trends`:
   - daily sync based on `SYNC_TREND_HOUR` (UTC)
 - `concurrent`:
@@ -31,10 +31,10 @@ If one source sync fails during a loop iteration, the server logs the error and 
 
 When adding or changing source behavior, these are the first files to inspect:
 
-- `lib/env_sync.py`
+- `apps/python/lib/env_sync.py`
   - source name constants
   - env parsing and validation
-- `sync_server/main.py`
+- `apps/python/sync_server/main.py`
   - source allowlist validation
   - per-source scheduling and dispatch branches
 
@@ -45,21 +45,21 @@ Use this checklist before implementing:
 1. Define source behavior:
    - time-series (high-volume, windowed manager path), or
    - non-time-series (standalone path).
-2. Add a table model under `lib/database/models/sync/`.
-3. Add a migration under `administration/migration/_files/`.
-4. Implement source sync logic under `lib/database/sync/`.
-5. Add source constants/config parsing in `lib/env_sync.py`.
-6. Register source in `sync_server/main.py` allowlist and scheduler path.
+2. Add a table model under `apps/python/lib/database/models/sync/`.
+3. Add a migration under `apps/python/administration/migration/_files/`.
+4. Implement source sync logic under `apps/python/lib/database/sync/`.
+5. Add source constants/config parsing in `apps/python/lib/env_sync.py`.
+6. Register source in `apps/python/sync_server/main.py` allowlist and scheduler path.
 7. Add tests in sync server + source-level test locations.
 8. Update development and operations docs.
 
 ## Minimal wiring sketch
 
 ```text
-1. env_sync.py
+1. apps/python/lib/env_sync.py
   -> define source name + config parsing
 
-2. sync_server/main.py
+2. apps/python/sync_server/main.py
   -> validate source
   -> schedule source
   -> call source sync function

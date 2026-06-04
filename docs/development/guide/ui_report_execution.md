@@ -15,14 +15,14 @@ At runtime, report execution path is:
 
 Core modules:
 
-- `ui/pages/_2_Reports.py`
-- `ui/components/report/report.py`
-- `ui/components/report/partials/report_option_inputs.py`
-- `ui/services/report_service.py`
+- `apps/python/ui/pages/_2_Reports.py`
+- `apps/python/ui/components/report/report.py`
+- `apps/python/ui/components/report/partials/report_option_inputs.py`
+- `apps/python/ui/services/report_service.py`
 
 ## Config-Driven Forms
 
-UI report forms are driven by `reports/config.toml` (loaded via `ui/services/config_service.py`).
+UI report forms are driven by `apps/python/reports/config.toml` (loaded via `apps/python/ui/services/config_service.py`).
 
 Per report metadata controls rendering behavior:
 
@@ -37,7 +37,7 @@ This keeps input structure aligned with report configuration instead of hardcode
 
 ## Running a Report
 
-`run_report(...)` in `ui/services/report_service.py` handles execution:
+`run_report(...)` in `apps/python/ui/services/report_service.py` handles execution:
 
 1. Build `argparse.Namespace` with `command` and `subcommand`.
 2. Attach form values and optional selected fields.
@@ -104,7 +104,7 @@ Dedicated files page (`_3_Report_Files.py`) provides broader browse/delete/downl
 
 When adding a new report and expecting UI support:
 
-1. Add report TOML definitions and regenerate `reports/config.toml`.
+1. Add report TOML definitions and regenerate `apps/python/reports/config.toml`.
 2. Confirm report appears in UI config and admin report mapping tables.
 3. Verify form renders correctly from option metadata.
 4. Verify access behavior for admin and non-admin users.

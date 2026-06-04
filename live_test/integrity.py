@@ -12,6 +12,7 @@ from sqlalchemy import text
 from lib.clients.postgresql import use_database
 from lib.database.sync import sync_audit_events, sync_connections
 from lib.env_sync import SyncConfig
+from live_test._shared.db_env import apply_live_test_db_env
 from live_test._shared.common import (
     AUDIT_SAMPLE_PATH,
     CONNECTION_SAMPLE_PATH,
@@ -273,6 +274,7 @@ def _run_source(source: str, scenario: Scenario, config: SyncConfig) -> None:
 
 
 def main() -> None:
+    apply_live_test_db_env()
     config = SyncConfig()
     init_data_tables(config)
     run_started_at = datetime.now(UTC)

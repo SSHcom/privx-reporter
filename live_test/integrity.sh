@@ -9,5 +9,6 @@ fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/env.sh"
+"$SCRIPT_DIR/verify_test_db.sh"
 
-uv run python -m live_test.integrity
+uv run --no-env-file python -m live_test.integrity

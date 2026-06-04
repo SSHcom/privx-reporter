@@ -11,7 +11,7 @@ UI auth modes are driven by `UI_AUTH_MODE` (comma-separated):
 - `local` enables username/password login
 - other values are treated as OIDC provider IDs (for example `keycloak`, `entra`)
 
-Routing and rendering are handled in `ui/pages/_0_Login.py`:
+Routing and rendering are handled in `apps/python/ui/pages/_0_Login.py`:
 
 - local login form via `_render_local_login()`
 - provider buttons via `render_oidc_login(provider)`
@@ -28,7 +28,7 @@ Local flow in `_0_Login.py`:
 
 ## OIDC Login Flow
 
-OIDC flow is implemented in `ui/views/login/oidc.py`.
+OIDC flow is implemented in `apps/python/ui/views/login/oidc.py`.
 
 High-level path:
 
@@ -55,7 +55,7 @@ This prevents Streamlit reruns from corrupting callback progress.
 
 ## User Resolution and Optional Auto-Provision
 
-User resolution/provision finalize is delegated to `ui/views/login/oidc_callback.py`:
+User resolution/provision finalize is delegated to `apps/python/ui/views/login/oidc_callback.py`:
 
 - `resolve_or_provision_user(...)`
 - `persist_oidc_session(...)`
@@ -67,11 +67,11 @@ Behavior:
 - if auto-provision enabled -> creates local user in mapped/default group
 - group mapping is applied only during creation, not retroactive updates
 
-Primary env parsing helpers live in `ui/views/login/oidc_config.py` and `ui/views/login/oidc_groups.py`.
+Primary env parsing helpers live in `apps/python/ui/views/login/oidc_config.py` and `apps/python/ui/views/login/oidc_groups.py`.
 
 ## Session Model
 
-Session model is managed by `ui/services/session/session_manager.py`:
+Session model is managed by `apps/python/ui/services/session/session_manager.py`:
 
 1. Reporter session: cookie token + DB-backed session row.
 2. OIDC session: persisted token material and expiry timestamps for restore/refresh.
@@ -102,15 +102,15 @@ When changing auth/OIDC code, preserve these behaviors:
 
 ## Main Auth/OIDC Files
 
-- `ui/pages/_0_Login.py`
-- `ui/views/login/oidc.py`
-- `ui/views/login/oidc_callback.py`
-- `ui/views/login/oidc_config.py`
-- `ui/views/login/oidc_crypto.py`
-- `ui/views/login/oidc_groups.py`
-- `ui/services/session/session_manager.py`
-- `ui/services/auth/oidc_refresh.py`
-- `ui/services/auth/oidc_logout.py`
+- `apps/python/ui/pages/_0_Login.py`
+- `apps/python/ui/views/login/oidc.py`
+- `apps/python/ui/views/login/oidc_callback.py`
+- `apps/python/ui/views/login/oidc_config.py`
+- `apps/python/ui/views/login/oidc_crypto.py`
+- `apps/python/ui/views/login/oidc_groups.py`
+- `apps/python/ui/services/session/session_manager.py`
+- `apps/python/ui/services/auth/oidc_refresh.py`
+- `apps/python/ui/services/auth/oidc_logout.py`
 
 ## Operations References
 

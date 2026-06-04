@@ -14,8 +14,8 @@ ENV BACKUP_DIR=/opt/reporter/.backup
 WORKDIR /app
 
 # Backup daemon imports from lib/, so copy the package tree as-is.
-COPY lib/ /app/lib/
-COPY backup_server/ /app/backup_server/
+COPY apps/python/lib/ /app/lib/
+COPY apps/python/backup_server/ /app/backup_server/
 
 # Disable the postgres image entrypoint so our Python CMD runs as-is.
 ENTRYPOINT []

@@ -1,6 +1,6 @@
 # Report Group
 
-Describing a practical structure of a report group module (`reports/<group>/__init__.py`).
+Describing a practical structure of a report group module (`apps/python/reports/<group>/__init__.py`).
 
 ## Existing helpers you can reuse
 
@@ -17,7 +17,7 @@ These helpers are optional, but they provide a consistent and low-friction defau
 
 ## Helper args and returns (roles example)
 
-Using `reports/roles/__init__.py` as reference:
+Using `apps/python/reports/roles/__init__.py` as reference:
 
 ### `get_subcommand_config`
 
@@ -114,7 +114,7 @@ A typical group handler flow is:
 4. Route by subcommand name:
    - build subcommand-specific inputs
    - validate input conversion result
-   - call the matching `reports/<group>/<report>/report.py` function
+   - call the matching `apps/python/reports/<group>/<report>/report.py` function
 5. For unknown subcommand, return a standardized error/info response.
 
 ## Minimal rule

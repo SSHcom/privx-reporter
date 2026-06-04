@@ -1,0 +1,4 @@
+#!/bin/bash
+# Dev implementation script for admin CLI (Stage 3 target: apps/python/administration/run).
+
+uv run dotenv run -- admin "$@"

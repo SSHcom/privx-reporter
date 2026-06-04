@@ -7,6 +7,21 @@ This guide is the source of truth for testing in this repository.
 - This is a UV project. Use `uv run ...` for direct Python tool execution.
 - Prefer Task targets for standard test workflows.
 - Do not use `python -m pytest` (it can run outside the project environment and fail with import/runtime mismatches).
+- Pytest, coverage, ruff, and mypy are scoped to Python trees: `apps/python/`, `tests/python/`, and `live_test/`. The `tests/` package root keeps `tests/__init__.py`; runnable tests and shared fixtures live under `tests/python/` (mirroring `apps/python/`). Lint and type-check paths are defined in `Taskfile.yml` and `pyproject.toml`.
+
+## Layout
+
+Python tests mirror application packages under `tests/python/`:
+
+- `tests/python/lib/` — `apps/python/lib/`
+- `tests/python/reports/` — `apps/python/reports/`
+- `tests/python/ui/` — `apps/python/ui/`
+- `tests/python/administration/` — `apps/python/administration/`
+- `tests/python/sync_server/` — `apps/python/sync_server/`
+- `tests/python/backup_server/` — `apps/python/backup_server/`
+- `tests/python/lib/_backup/` — `apps/python/lib/_backup/` (host backup archive CLI)
+
+Shared test support (`conftest.py`, `fixtures/`, `helpers/`, `mocks/`) also lives under `tests/python/`. Imports may use the `tests.*` package name (see `tests/__init__.py`).
 
 ## Primary test commands
 
@@ -26,8 +41,8 @@ task test-cov-integration
 For a specific file or directory, use `pytest` directly through UV:
 
 ```sh
-uv run pytest tests/lib/cli_engine/test_generator.py
-uv run pytest tests/reports/roles/
+uv run pytest tests/python/lib/cli_engine/test_generator.py
+uv run pytest tests/python/reports/roles/
 ```
 
 Use markers when needed:
@@ -56,10 +71,10 @@ task test-database
 
 Run `task test-database` after changes to:
 
-- `administration/migration/_files`
-- `lib/database/models/`
+- `apps/python/administration/migration/_files`
+- `apps/python/lib/database/models/`
 
-Reference: `tests/lib/database/models/test_schema_parity.py` (marker: `database`).
+Reference: `tests/python/lib/database/models/test_schema_parity.py` (marker: `database`).
 
 ## Recommended verification flow for code changes
 

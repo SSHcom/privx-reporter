@@ -4,20 +4,20 @@ This document describes page-level flow and sidebar navigation patterns in the U
 
 ## Page Discovery and Layout
 
-Streamlit page discovery is flat under `ui/pages/`.
+Streamlit page discovery is flat under `apps/python/ui/pages/`.
 
 Current conventions:
 
 - numbered user pages (`_0_Login.py`, `_1_Home.py`, `_2_Reports.py`, `_3_Report_Files.py`)
 - admin pages (`Admin_*.py`) in the same directory
 
-Because page discovery is flat, heavier view logic is moved to `ui/views/` and reusable blocks to `ui/components/`.
+Because page discovery is flat, heavier view logic is moved to `apps/python/ui/views/` and reusable blocks to `apps/python/ui/components/`.
 
 **Note**: A nested page structure is not supported by Streamlit.
 
 ## App-Level Routing
 
-`ui/app.py` is the initial router:
+`apps/python/ui/app.py` is the initial router:
 
 1. configure logging and page config,
 2. initialize session state,
@@ -29,7 +29,7 @@ This keeps authentication entry behavior centralized.
 
 ## Shared Page Bootstrap
 
-Most pages call `setup_page(...)` from `ui/services/page_bootstrap.py`.
+Most pages call `setup_page(...)` from `apps/python/ui/services/page_bootstrap.py`.
 
 `setup_page` handles:
 
@@ -52,7 +52,7 @@ Normal login rendering still uses `setup_page()`.
 
 ## Sidebar Navigation Model
 
-Sidebar rendering lives in `ui/components/sidebar.py`.
+Sidebar rendering lives in `apps/python/ui/components/sidebar.py`.
 
 Main sections:
 
@@ -65,9 +65,9 @@ Report selection writes `selected_primary` and `selected_subcommand` into sessio
 
 ## Report Views
 
-Sidebar report views are resolved by `ui/services/report_view_resolver.py`:
+Sidebar report views are resolved by `apps/python/ui/services/report_view_resolver.py`:
 
-1. Build default grouped view from `reports/config.toml`.
+1. Build default grouped view from `apps/python/reports/config.toml`.
 2. Filter by user-visible reports (unless admin).
 3. Optionally append alternate report-group views from admin DB.
 4. Cache resolved views in session state.

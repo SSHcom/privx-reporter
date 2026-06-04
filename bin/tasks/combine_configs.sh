@@ -102,5 +102,5 @@ if [[ $# -ne 0 ]]; then
   exit 1
 fi
 
-combine_config "${ROOT_DIR}/reports" "${ROOT_DIR}/reports/config.toml"
-combine_config "${ROOT_DIR}/administration" "${ROOT_DIR}/administration/config.toml"
+combine_config "${ROOT_DIR}/apps/python/reports" "${ROOT_DIR}/apps/python/reports/config.toml"
+combine_config "${ROOT_DIR}/apps/python/administration" "${ROOT_DIR}/apps/python/administration/config.toml"

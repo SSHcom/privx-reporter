@@ -9,7 +9,7 @@ It focuses on developer orientation, not method-by-method internals.
 At runtime, sync server execution follows this path:
 
 1. The user runs `bin/serve_sync` (or production wrapper scripts).
-2. Entry point `sync_server/main.py` creates `SyncConfig` from environment.
+2. Entry point `apps/python/sync_server/main.py` creates `SyncConfig` from environment.
 3. Databases are initialized (`init_databases()`), and the PrivX API client is created.
 4. A background thread is started for `concurrent` snapshots when enabled.
 5. The main loop runs every 5 seconds and dispatches enabled sources.
@@ -47,11 +47,11 @@ flowchart TD
 
 ## Where to look in code
 
-- `sync_server/main.py`: server startup, scheduling, and source dispatch.
-- `lib/env_sync.py`: source names and runtime sync configuration.
-- `lib/database/sync/time_series/`: time-series sync abstractions (`SyncManager`, protocol, windowing, sources).
-- `lib/database/sync/trend.py`: daily trend sync path.
-- `lib/database/sync/concurrent.py`: periodic concurrent stats sync path.
+- `apps/python/sync_server/main.py`: server startup, scheduling, and source dispatch.
+- `apps/python/lib/env_sync.py`: source names and runtime sync configuration.
+- `apps/python/lib/database/sync/time_series/`: time-series sync abstractions (`SyncManager`, protocol, windowing, sources).
+- `apps/python/lib/database/sync/trend.py`: daily trend sync path.
+- `apps/python/lib/database/sync/concurrent.py`: periodic concurrent stats sync path.
 
 ## Links
 

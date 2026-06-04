@@ -18,7 +18,7 @@ To address this, the time-series path uses:
 ## Time-series module map
 
 ```text
-lib/database/sync/time_series/
+apps/python/lib/database/sync/time_series/
 ├── __init__.py
 ├── manager.py
 ├── protocol.py
@@ -55,7 +55,7 @@ lib/database/sync/time_series/
 
 ## Source contract (what you implement)
 
-Each source implements the `SyncSource` protocol in `lib/database/sync/time_series/protocol.py`.
+Each source implements the `SyncSource` protocol in `apps/python/lib/database/sync/time_series/protocol.py`.
 
 Small contract sketch:
 
@@ -68,7 +68,7 @@ class SyncSource(Protocol):
     def build_record_id(self, item: dict[str, Any]) -> str | None: ...
 ```
 
-Use `AuditEventSync` and `ConnectionSync` under `lib/database/sync/time_series/sources/` as reference implementations.
+Use `AuditEventSync` and `ConnectionSync` under `apps/python/lib/database/sync/time_series/sources/` as reference implementations.
 
 ## How sync windows work (and why)
 
@@ -109,8 +109,8 @@ This is the core balancing mechanism: keep windows large enough for efficiency, 
 
 ### 1) Entry and manager wiring
 
-- `sync_server/main.py` schedules source sync based on source config.
-- Calls route through `lib/database/sync/__init__.py`.
+- `apps/python/sync_server/main.py` schedules source sync based on source config.
+- Calls route through `apps/python/lib/database/sync/__init__.py`.
 - That module keeps one manager instance per source:
   - `SyncManager(AuditEventSync())`
   - `SyncManager(ConnectionSync())`
@@ -186,22 +186,22 @@ Result: rerunning overlapping windows does not corrupt data and does not miss sa
 
 ## Step-by-step: add a new time-series source
 
-1. **Create data model** in `lib/database/models/sync/<source>.py`.
+1. **Create data model** in `apps/python/lib/database/models/sync/<source>.py`.
    - Use primary key shape compatible with this path: `timestamp` + `record_id`.
-2. **Add migration** in `administration/migration/_files/`.
-3. **Implement source** in `lib/database/sync/time_series/sources/<source>.py`.
+2. **Add migration** in `apps/python/administration/migration/_files/`.
+3. **Implement source** in `apps/python/lib/database/sync/time_series/sources/<source>.py`.
    - implement full `SyncSource` contract
    - ensure `build_record_id` is stable and deterministic
 4. **Expose source** in time-series source exports (`sources/__init__.py` if needed).
-5. **Wire manager wrappers** in `lib/database/sync/__init__.py`.
+5. **Wire manager wrappers** in `apps/python/lib/database/sync/__init__.py`.
    - add manager instance
    - add `sync_<source>` and optional `backfill_<source>` wrappers
-6. **Add env/source registration** in `lib/env_sync.py`.
-7. **Register scheduling path** in `sync_server/main.py`.
+6. **Add env/source registration** in `apps/python/lib/env_sync.py`.
+7. **Register scheduling path** in `apps/python/sync_server/main.py`.
    - source allowlist
    - interval tracking and dispatch branch
 8. **Add tests**:
-   - source behavior tests under `tests/lib/database/sync/sources/`
+   - source behavior tests under `tests/python/lib/database/sync/sources/`
    - manager/server integration behavior where relevant
 9. **Update docs**:
    - development guide index and any operations env/runtime docs

@@ -1,6 +1,6 @@
 [project]
 name = "reporter-privx-dev"
-version = "1.0.0"
+version = "1.0.2"
 description = "PrivX reporting service with PostgreSQL (TimescaleDB) sync"
 requires-python = ">=3.13"
 dependencies = [
@@ -29,6 +29,7 @@ allow-direct-references = true
 create-env = "lib.interactive.env._create_env:main"
 sync-server = "sync_server.main:main"
 sync-server-live-test = "live_test.main:main"
+backup-server = "backup_server.main:main"
 report = "lib._report.main:main"
 admin = "lib._admin.main:main"
 
@@ -36,8 +37,17 @@ admin = "lib._admin.main:main"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.hatch.build.targets.wheel]
-packages = ["lib", "sync_server", "live_test", "reports", "administration"]
+[tool.hatch.build]
+# Editable/dev installs: apps/python packages + root live_test/.
+dev-mode-dirs = ["apps/python", "."]
+
+[tool.hatch.build.targets.wheel.force-include]
+"apps/python/lib" = "lib"
+"apps/python/sync_server" = "sync_server"
+"apps/python/backup_server" = "backup_server"
+"apps/python/reports" = "reports"
+"apps/python/administration" = "administration"
+# live_test is imported from the repo root via dev-mode-dirs / _reporter_privx_dev.pth (not vendored here).
 
 [dependency-groups]
 dev = [
@@ -50,6 +60,20 @@ dev = [
 
 [tool.ruff]
 line-length = 120
+# First-party import roots (isort); lint/format targets are set in Taskfile and CI.
+src = ["apps/python", "live_test"]
+extend-exclude = [
+    "apps/go",
+    "release",
+    "bin",
+    "docs",
+    "security-report",
+    ".github",
+    ".cursor",
+    ".todos",
+    ".vscode",
+    "ui/custom/cookie/frontend",
+]
 
 [tool.ruff.lint]
 # Enable stricter type-related linting rules
@@ -71,6 +95,8 @@ ignore = ["I001"]
 [tool.mypy]
 # Strict type checking configuration
 python_version = "3.13"
+# Prefer monorepo sources over the editable install in .venv (see dev-mode-dirs).
+mypy_path = "apps/python"
 explicit_package_bases = true
 warn_return_any = true
 warn_unused_configs = true
@@ -86,6 +112,12 @@ warn_unreachable = true
 strict_equality = true
 strict_optional = true
 show_error_codes = true
+# Same packages as pre-layout mypy (lib, reports, sync_server), under apps/python/.
+files = [
+    "apps/python/lib",
+    "apps/python/reports",
+    "apps/python/sync_server",
+]
 
 # Module-specific overrides
 [[tool.mypy.overrides]]
@@ -95,7 +127,10 @@ module = [
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+# Python tests mirror apps/python/ under tests/python/.
+pythonpath = ["apps/python", "."]
+testpaths = ["tests/python"]
+norecursedirs = [".git", "node_modules", "__pycache__", "apps"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -109,4 +144,18 @@ markers = [
     "integration: Integration tests",
     "database: Tests requiring local database test container",
 ]
+
+[tool.coverage.run]
+source_pkgs = [
+    "lib",
+    "sync_server",
+    "reports",
+    "administration",
+    "backup_server",
+    "ui",
+    "live_test",
+]
+
+[tool.coverage.report]
+show_missing = true
 

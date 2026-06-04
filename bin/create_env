@@ -1,2 +1,9 @@
 #!/bin/bash
-uv run create-env "$@"
+# Stable dev entrypoint. Implementation: apps/python/lib/interactive/env/run.
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(realpath "$script_dir/..")"
+
+exec "$repo_root/apps/python/lib/interactive/env/run" "$@"

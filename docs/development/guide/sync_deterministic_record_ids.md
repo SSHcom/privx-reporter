@@ -28,7 +28,7 @@ Example from connections:
 
 - `connection_id|connected_timestamp`
 
-This is implemented in `lib/database/sync/time_series/sources/connection.py`.
+This is implemented in `apps/python/lib/database/sync/time_series/sources/connection.py`.
 
 Composite IDs are usually readable, efficient, and easy to reason about.
 
@@ -40,7 +40,7 @@ Example from audit events:
 
 - canonical JSON (sorted keys, stable separators) -> SHA-256
 
-This is implemented in `lib/database/sync/time_series/sources/audit.py`.
+This is implemented in `apps/python/lib/database/sync/time_series/sources/audit.py`.
 
 This strategy is robust, but make sure canonicalization is stable so equivalent payloads always produce the same hash.
 
@@ -65,8 +65,8 @@ When implementing `<sync source>.build_record_id(...)`:
 
 ## Related references
 
-- `lib/database/sync/time_series/sources/audit.py`
-- `lib/database/sync/time_series/sources/connection.py`
+- `apps/python/lib/database/sync/time_series/sources/audit.py`
+- `apps/python/lib/database/sync/time_series/sources/connection.py`
 - `docs/development/guide/sync_source_time_series.md`
 
 ## Links
