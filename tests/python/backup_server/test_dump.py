@@ -75,12 +75,17 @@ def test_build_pg_dump_command_uses_custom_format() -> None:
     cmd = build_pg_dump_command(data, Path("/opt/reporter/.backup/data-x.dump"))
     assert cmd == [
         "pg_dump",
-        "-h", "reporter-data-db",
-        "-p", "5432",
-        "-U", "postgres",
-        "-d", "report_data",
+        "-h",
+        "reporter-data-db",
+        "-p",
+        "5432",
+        "-U",
+        "postgres",
+        "-d",
+        "report_data",
         "-Fc",
-        "-f", "/opt/reporter/.backup/data-x.dump",
+        "-f",
+        "/opt/reporter/.backup/data-x.dump",
     ]
 
 

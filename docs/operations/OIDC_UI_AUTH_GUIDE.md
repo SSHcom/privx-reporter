@@ -8,76 +8,94 @@ For implementation structure and code flow, see [UI auth and OIDC](../developmen
 
 This guide covers:
 
-- Switching UI auth mode to OIDC
+- Enabling OIDC providers
 - Required environment variables
 - Provider-specific notes
 - Local user mapping and optional auto-provisioning
 - Session and logout behavior
 - Common troubleshooting cases
 
-## Auth Modes
+## Enabling OIDC Providers
 
-UI auth mode is controlled by:
+Reporter supports up to two OIDC providers. Local login is always available.
 
-- `UI_AUTH_MODE=local` (default behavior)
-- `UI_AUTH_MODE=local,keycloak`
-- `UI_AUTH_MODE=local,keycloak,entra` (multiple OIDC providers)
+Enable providers using these settings:
 
-Notes:
+- `OIDC_1_ENABLED=true` - Enable OIDC provider 1
+- `OIDC_2_ENABLED=true` - Enable OIDC provider 2
 
-- `AUTH_MODE` is not used by current UI auth routing.
-- `UI_AUTH_MODE` is a comma-separated list. `local` enables username+password login. Any other entry is treated as an OIDC provider id and gets a separate login button.
+Each enabled provider appears as a login button on the login page.
+
+Optional UI behavior:
+
+- `UI_COLLAPSE_LOCAL_LOGIN=true` shows local login in a collapsible section below OIDC buttons when at least one provider is enabled.
+
+Common slot patterns:
+
+- Single provider: `OIDC_1_ENABLED=true`, `OIDC_2_ENABLED=false`
+- Two providers: `OIDC_1_ENABLED=true`, `OIDC_2_ENABLED=true`
+
+## Configuration Location (`ENV_SOURCE`)
+
+- `ENV_SOURCE=db`: configure OIDC values in Admin UI -> App Config.
+- `ENV_SOURCE=env`: configure OIDC values in `.env` and expose the same keys under `reporter-ui -> environment` in `docker-compose-env.yml`.
+
+For `ENV_SOURCE=env`:
+
+- Uncomment enable flags and the active provider slot variables in `docker-compose-env.yml`.
+- Leave unused provider slot variables commented (for example keep `OIDC_2_*` commented when `OIDC_2_ENABLED=false`).
+- Optional global OIDC variables (`OIDC_AUTO_PROVISION*`, `OIDC_GROUP_*`) should stay unset/commented if you do not use those features.
 
 ## Required OIDC Environment Variables
 
-Set these for each OIDC provider `X` enabled in `UI_AUTH_MODE` (variables are prefixed with the provider id in uppercase):
+For each enabled provider slot (1 or 2), set these variables:
 
-- `X_OIDC_ISSUER`
-- `X_OIDC_CLIENT_ID`
-- `X_OIDC_CLIENT_SECRET`
-- `X_OIDC_REDIRECT_URI`
-- `X_OIDC_POST_LOGOUT_REDIRECT_URI`
-- `X_OIDC_STATE_SECRET` - used to sign and validate the OIDC `state` parameter for CSRF protection; the `state` value is signed, not encrypted
+- `OIDC_<n>_NAME` - Display name shown on the login button (e.g. "Keycloak", "Entra ID")
+- `OIDC_<n>_ICON` - SVG icon file name (e.g. `Keycloak.svg`, `EntraID.svg`, `Generic-OpenID.svg`)
+- `OIDC_<n>_ISSUER` - OIDC issuer URL
+- `OIDC_<n>_CLIENT_ID` - Client ID from the IdP app registration
+- `OIDC_<n>_CLIENT_SECRET` - Client secret from the IdP app registration
+- `OIDC_<n>_REDIRECT_URI` - Must match IdP app registration exactly
+- `OIDC_<n>_POST_LOGOUT_REDIRECT_URI` - Where to redirect after logout
+- `OIDC_<n>_STATE_SECRET` - Long random secret for CSRF protection
 
 Optional:
 
-- `X_OIDC_SCOPES` (default: `openid profile email`)
-- `X_OIDC_PROMPT` (default: `login`) - OIDC `prompt` parameter sent on the authorization request; set a provider-specific override such as `select_account` when needed
+- `OIDC_<n>_SCOPES` (default: `openid profile email`)
+- `OIDC_<n>_PROMPT` (default: `login`) - OIDC `prompt` parameter; use `select_account` for Entra if needed
 
 Current implementation note:
 
-- Reporter implements the OpenID Connect Authorization Code Flow as a confidential client, without PKCE.
-- Reporter currently uses a server-side authorization code flow with `client_secret` during token exchange.
-- PKCE (`code_verifier`, `code_challenge`) is not currently implemented. In the current Reporter flow, this is acceptable because Reporter acts as a confidential client and performs the authorization code token exchange server-side using a client secret.
+- Reporter implements OpenID Connect Authorization Code Flow with PKCE (`S256`) and state+nonce validation.
+- Reporter uses a confidential client and includes `client_secret` during token exchange.
 - Operationally, configure the IdP client as a confidential client that is allowed to use the configured redirect URI.
 
-### Provider Prefix Rules
-
-- For provider id `X` (for example `keycloak`, `entra`), set `X_OIDC_*` variables (uppercased): `KEYCLOAK_OIDC_ISSUER`, `ENTRA_OIDC_CLIENT_ID`, and so on.
-- Each provider needs its own `*_OIDC_STATE_SECRET` for `state` signing and validation. This protects integrity, not confidentiality.
-
-Example:
+### Example Configuration
 
 ```env
-UI_AUTH_MODE=local,keycloak,entra
+OIDC_1_ENABLED=true
+OIDC_1_NAME=Keycloak
+OIDC_1_ICON=Keycloak.svg
+OIDC_1_ISSUER=http://localhost:8080/realms/reporter
+OIDC_1_CLIENT_ID=reporter-local
+OIDC_1_CLIENT_SECRET=<client-secret>
+OIDC_1_REDIRECT_URI=http://localhost:8501/0_Login
+OIDC_1_POST_LOGOUT_REDIRECT_URI=http://localhost:8501/
+OIDC_1_SCOPES="openid profile email"
+OIDC_1_PROMPT=login
+OIDC_1_STATE_SECRET=<long-random-secret>
 
-KEYCLOAK_OIDC_ISSUER=http://localhost:8080/realms/reporter
-KEYCLOAK_OIDC_CLIENT_ID=reporter-local
-KEYCLOAK_OIDC_CLIENT_SECRET=<client-secret>
-KEYCLOAK_OIDC_REDIRECT_URI=http://localhost:8501/0_Login
-KEYCLOAK_OIDC_POST_LOGOUT_REDIRECT_URI=http://localhost:8501/
-KEYCLOAK_OIDC_SCOPES="openid profile email"
-KEYCLOAK_OIDC_PROMPT=login
-KEYCLOAK_OIDC_STATE_SECRET=<long-random-secret>
-
-ENTRA_OIDC_ISSUER=https://login.microsoftonline.com/<tenant-id>/v2.0
-ENTRA_OIDC_CLIENT_ID=<app-client-id>
-ENTRA_OIDC_CLIENT_SECRET=<client-secret>
-ENTRA_OIDC_REDIRECT_URI=http://localhost:8501/0_Login
-ENTRA_OIDC_POST_LOGOUT_REDIRECT_URI=http://localhost:8501/
-ENTRA_OIDC_SCOPES="openid profile email offline_access"
-ENTRA_OIDC_PROMPT=login
-ENTRA_OIDC_STATE_SECRET=<long-random-secret>
+OIDC_2_ENABLED=true
+OIDC_2_NAME=Entra ID
+OIDC_2_ICON=EntraID.svg
+OIDC_2_ISSUER=https://login.microsoftonline.com/<tenant-id>/v2.0
+OIDC_2_CLIENT_ID=<app-client-id>
+OIDC_2_CLIENT_SECRET=<client-secret>
+OIDC_2_REDIRECT_URI=http://localhost:8501/0_Login
+OIDC_2_POST_LOGOUT_REDIRECT_URI=http://localhost:8501/
+OIDC_2_SCOPES="openid profile email offline_access"
+OIDC_2_PROMPT=select_account
+OIDC_2_STATE_SECRET=<long-random-secret>
 ```
 
 ## Provider Notes
@@ -85,7 +103,7 @@ ENTRA_OIDC_STATE_SECRET=<long-random-secret>
 ### Keycloak
 
 - Typical issuer format: `http(s)://<host>/realms/<realm>`
-- Redirect URI in the Keycloak client must exactly match `X_OIDC_REDIRECT_URI`.
+- Redirect URI in the Keycloak client must exactly match `OIDC_<n>_REDIRECT_URI`.
 - Post-logout redirect URI must be allowed in the Keycloak client settings.
 - Common username mapping:
   - `preferred_username`
@@ -180,7 +198,7 @@ For OIDC sessions, Reporter also tracks:
 - ID token
 - access and refresh expiry timestamps
 
-Reporter stores the authentication source in `session.auth_source`. Current values are `local` or provider-qualified OIDC values such as `oidc:keycloak` or `oidc:entra`. This field is used to determine OIDC session restore, refresh, and logout behavior.
+Reporter stores the authentication source in `session.auth_source`. Current values are `local` or provider-qualified OIDC values such as `oidc:1` or `oidc:2`. This field is used to determine OIDC session restore, refresh, and logout behavior.
 
 Important behavior:
 
@@ -219,13 +237,13 @@ Check:
 
 - the issuer URL is correct
 - the UI runtime can reach the IdP
-- the deployment should still expose that provider in `UI_AUTH_MODE`
+- the provider is enabled (`OIDC_<n>_ENABLED=true`)
 
 ### `invalid_grant` or `Code not valid`
 
 Check:
 
-- redirect URI exact match between IdP client config and `X_OIDC_REDIRECT_URI`
+- redirect URI exact match between IdP client config and `OIDC_<n>_REDIRECT_URI`
 - callback code was not reused after a previous exchange
 - system clocks are in sync
 

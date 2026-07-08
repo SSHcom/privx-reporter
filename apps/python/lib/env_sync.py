@@ -1,8 +1,9 @@
 """Sync server environment variables configuration and validation."""
 
 import logging
-import os
 from dataclasses import dataclass
+
+from lib.service.env_source import getEnv
 
 # Available sources
 SYNC_SOURCES = "SYNC_SOURCES"
@@ -57,7 +58,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_retention_days(env_var: str, default: str = DEFAULT_SYNC_CONFIG) -> int:
-    raw_value = os.getenv(env_var, default)
+    raw_value = getEnv(env_var, default)
     parts = [part.strip() for part in raw_value.split(",")]
 
     if len(parts) != 3:
@@ -89,18 +90,20 @@ class SyncConfig:
     audit_event_config: SyncSourceConfig | None = None
 
     def __init__(self) -> None:
-        self.sources = [source.strip() for source in os.getenv(SYNC_SOURCES, "").split(",") if source.strip()]
-        self.batch_size = int(os.getenv(SYNC_BATCH_SIZE, self.batch_size))
-        self.max_range_hours = int(os.getenv(SYNC_MAX_RANGE_HOURS, self.max_range_hours))
+        self.sources = [source.strip() for source in getEnv(SYNC_SOURCES, "").split(",") if source.strip()]
+        self.batch_size = int(getEnv(SYNC_BATCH_SIZE, str(self.batch_size)))
+        self.max_range_hours = int(getEnv(SYNC_MAX_RANGE_HOURS, str(self.max_range_hours)))
         self.window_sizes_minutes = self._parse_window_sizes(
-            os.getenv(SYNC_WINDOW_SIZES_MINUTES),
+            getEnv(SYNC_WINDOW_SIZES_MINUTES),
             default=self.window_sizes_minutes,
         )
-        self.max_records_per_window = int(os.getenv(SYNC_MAX_RECORDS_PER_WINDOW, self.max_records_per_window))
-        self.window_size_down_minutes = int(
-            os.getenv(SYNC_WINDOW_SIZE_DOWN_MINUTES, self.window_size_down_minutes),
+        self.max_records_per_window = int(
+            getEnv(SYNC_MAX_RECORDS_PER_WINDOW, str(self.max_records_per_window)),
         )
-        self.sync_trend_hour = self._parse_sync_trend_hour(os.getenv(SYNC_TREND_HOUR))
+        self.window_size_down_minutes = int(
+            getEnv(SYNC_WINDOW_SIZE_DOWN_MINUTES, str(self.window_size_down_minutes)),
+        )
+        self.sync_trend_hour = self._parse_sync_trend_hour(getEnv(SYNC_TREND_HOUR))
         self.connection_config = self._parse_sync_config(CONNECTION_SOURCE, SYNC_CONNECTION)
         self.audit_event_config = self._parse_sync_config(AUDIT_EVENT_SOURCE, SYNC_AUDIT)
         self._validate()
@@ -145,7 +148,7 @@ class SyncConfig:
             logger.info(f"--- Connection data retention: {connection_config.retention_days} days")
 
     def _parse_sync_config(self, source: str, env_var: str, default: str = DEFAULT_SYNC_CONFIG) -> SyncSourceConfig:
-        raw_value = os.getenv(env_var, default)
+        raw_value = getEnv(env_var, default)
         parts = [part.strip() for part in raw_value.split(",")]
 
         if len(parts) != 3:
@@ -225,3 +228,29 @@ class SyncConfig:
 
         if sync_config.retention_days <= 0:
             raise ValueError(f"{sync_config.source}: retention_days must be > 0")
+
+
+def check_sync_config_ready() -> tuple[bool, list[str]]:
+    """Check if required sync configuration is available.
+
+    Returns:
+        Tuple of (is_ready, list of missing config descriptions).
+        Call reloadEnv() before this to refresh cached DB values.
+    """
+    missing: list[str] = []
+
+    sources_raw = getEnv(SYNC_SOURCES, "")
+    sources = [s.strip() for s in sources_raw.split(",") if s.strip()]
+    if not sources:
+        missing.append(f"{SYNC_SOURCES} (sync sources not configured)")
+
+    privx_hostname = getEnv("PRIVX_HOSTNAME", "")
+    if not privx_hostname or privx_hostname == "localhost":
+        missing.append("PRIVX_HOSTNAME (PrivX server hostname)")
+
+    privx_client_id = getEnv("PRIVX_API_CLIENT_ID", "")
+    privx_client_secret = getEnv("PRIVX_API_CLIENT_SECRET", "")
+    if not privx_client_id or not privx_client_secret:
+        missing.append("PRIVX_API_CLIENT_ID/SECRET (PrivX API credentials)")
+
+    return (len(missing) == 0, missing)

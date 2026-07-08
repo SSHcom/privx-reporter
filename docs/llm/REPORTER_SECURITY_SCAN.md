@@ -20,10 +20,10 @@ Reporter in production has **two user-facing surfaces** and several **internal**
 
 ### In scope for security assessment
 
-| Surface | How it is deployed                                                                                                                                                                                                                                                                                       | Trust model                                                                                                                      | Primary risks                                                                                                                                                                                                                             |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Surface | How it is deployed                                                                                                                                                                                                                                                                                                                                                                                                                                             | Trust model                                                                                                                      | Primary risks                                                                                                                                                                                                                                           |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **UI**  | Image `privxsshcom/privx-reporter-ui` built from `release/reporter_ui/Dockerfile-ui`; started via `release/common/bin/ui` (symlinked as `reporter-ui`, Streamlit on `0.0.0.0:8501`, optional TLS via `SSL_CERT` / `SSL_KEY`). Compose: `release/reporter_ui/docker-compose-ui.yml` or UI service in `release/reporter_cli/docker-compose.yml`. Session cookies use the Streamlit custom component at `ui/custom/cookie/` (bundled JS only in prod; see below). | **Untrusted network users** may reach the UI if the port is exposed. Authenticated users run reports with DB-scoped permissions. | Auth bypass, session fixation, OIDC misconfiguration, IDOR on report output paths, SQL injection via UI inputs, secrets in env/volumes, dependency CVEs in the UI image, **browser-side cookie component** (`frontend/build` bundle served to clients). |
-| **CLI** | Installer image `privxsshcom/privx-reporter-cli` (`release/reporter_cli/Dockerfile-cli` + `release/reporter_cli/install.sh`); host commands `report`, `admin`, `create_env`, `backup` under `/opt/reporter`. Security pins: `release/common/security.sh` after `uv sync`.                                | **Trusted operators** only. Misuse via CLI is treated as an organisational control issue, not an external attacker model.        | Supply-chain (deps, installer), credential handling on disk, backup/subprocess safety, PrivX API credential exposure in `.env`. Still scan for accidental foot-guns, but **deprioritize** findings that require shell access on the host. |
+| **CLI** | Installer image `privxsshcom/privx-reporter-cli` (`release/reporter_cli/Dockerfile-cli` + `release/reporter_cli/install.sh`); host commands `report`, `admin`, `create_env`, `backup` under `/opt/reporter`. Security pins: `release/common/security.sh` after `uv sync`.                                                                                                                                                                                      | **Trusted operators** only. Misuse via CLI is treated as an organisational control issue, not an external attacker model.        | Supply-chain (deps, installer), credential handling on disk, backup/subprocess safety, PrivX API credential exposure in `.env`. Still scan for accidental foot-guns, but **deprioritize** findings that require shell access on the host.               |
 
 Shared code paths: `lib/`, `reports/`, `administration/` (used by CLI and UI). Tag findings on these as `cli+ui-shared`; only count as **UI-reachable** if the same code is invoked from `ui/services/` without an additional trusted gate.
 
@@ -64,13 +64,13 @@ release/common/bin/ui  |  bin/serve_ui
 
 **How to triage SAST on `administration/migration/`**
 
-| Question | Guidance |
-| -------- | -------- |
-| Can an unauthenticated HTTP client trigger this SQL? | No, unless code is later wired from Streamlit pages into `apply_migrations()`. |
-| Can an authenticated UI user trigger it per click? | No; not via `ui/app.py` or page handlers today. |
-| Who can influence migration SQL content? | Deploy-time: env (e.g. `SYNC_AUDIT`, `SYNC_CONNECTION` parsed by `parse_retention_days()` in `lib/env_sync.py`), new migration files in releases, compromise of UI/sync image or host. |
-| Example: Bandit SQLi in `2026-04-17-create-all-tables.py` | f-strings embed **int** retention days from env parsing, not request parameters. Classify as **deploy/config trust** or hardening (parameterized SQL), not as login-form SQLi. |
-| Tag in `findings.json` | `surface`: `cli+ui-shared` or `sync-internal`; set `production_relevance` in `FINAL_ASSESSMENT.md` using the table above. |
+| Question                                                  | Guidance                                                                                                                                                                               |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Can an unauthenticated HTTP client trigger this SQL?      | No, unless code is later wired from Streamlit pages into `apply_migrations()`.                                                                                                         |
+| Can an authenticated UI user trigger it per click?        | No; not via `ui/app.py` or page handlers today.                                                                                                                                        |
+| Who can influence migration SQL content?                  | Deploy-time: env (e.g. `SYNC_AUDIT`, `SYNC_CONNECTION` parsed by `parse_retention_days()` in `lib/env_sync.py`), new migration files in releases, compromise of UI/sync image or host. |
+| Example: Bandit SQLi in `2026-04-17-create-all-tables.py` | f-strings embed **int** retention days from env parsing, not request parameters. Classify as **deploy/config trust** or hardening (parameterized SQL), not as login-form SQLi.         |
+| Tag in `findings.json`                                    | `surface`: `cli+ui-shared` or `sync-internal`; set `production_relevance` in `FINAL_ASSESSMENT.md` using the table above.                                                              |
 
 Document this bootstrap boundary in `FINAL_ASSESSMENT.md` section 2 (attack surfaces) so migration findings are not dismissed as "CLI install only" or overstated as "every UI request runs migrations."
 
@@ -78,13 +78,13 @@ Document this bootstrap boundary in `FINAL_ASSESSMENT.md` section 2 (attack surf
 
 The UI writes session cookies through a small Streamlit custom component (Vite + TypeScript). This is the **only** JavaScript/npm subtree in the repo.
 
-| Path | Role |
-| ---- | ---- |
-| `ui/custom/cookie/__init__.py` | Python wrapper; loads component from `frontend/build` in production |
-| `ui/custom/cookie/frontend/build/` | **Production runtime assets** (committed bundle: `index.html`, hashed `assets/*.js`) shipped in the UI image via `COPY apps/python/ui/ ui/` |
-| `ui/custom/cookie/frontend/src/` | Dev/build source; not executed in production unless rebuilt into `build/` |
-| `ui/custom/cookie/frontend/package.json`, `package-lock.json` | Lockfile for building the bundle; use for **optional** `npm audit` |
-| `ui/custom/cookie/frontend/node_modules/` | **Gitignored** (`frontend/.gitignore`); not in the repo; exclude from filesystem scans |
+| Path                                                          | Role                                                                                                                                        |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ui/custom/cookie/__init__.py`                                | Python wrapper; loads component from `frontend/build` in production                                                                         |
+| `ui/custom/cookie/frontend/build/`                            | **Production runtime assets** (committed bundle: `index.html`, hashed `assets/*.js`) shipped in the UI image via `COPY apps/python/ui/ ui/` |
+| `ui/custom/cookie/frontend/src/`                              | Dev/build source; not executed in production unless rebuilt into `build/`                                                                   |
+| `ui/custom/cookie/frontend/package.json`, `package-lock.json` | Lockfile for building the bundle; use for **optional** `npm audit`                                                                          |
+| `ui/custom/cookie/frontend/node_modules/`                     | **Gitignored** (`frontend/.gitignore`); not in the repo; exclude from filesystem scans                                                      |
 
 **Production behavior** (`ui/custom/cookie/__init__.py`):
 
@@ -100,11 +100,11 @@ The UI writes session cookies through a small Streamlit custom component (Vite +
 
 ### Out of scope for external attack surface (still scan lightly for supply chain)
 
-| Component          | Notes                                                                                                                                                                                                                                                                                        |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Component          | Notes                                                                                                                                                                                                                                                                                                    |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Sync server**    | `release/reporter_sync/Dockerfile-sync`, `apps/python/sync_server/`. No HTTP/API surface for end users; pulls from PrivX and writes to DB on an internal Docker network. Do not open Jira tickets for "remote unauthenticated RCE on sync" unless you prove network exposure beyond the compose network. |
-| **Backup sidecar** | `Dockerfile-backup` in standalone compose; operational, not user-facing.                                                                                                                                                                                                                     |
-| **Dev-only**       | `bin/serve_ui`, tests, `live_test/`, local `.venv`. Exclude from SAST paths unless checking for committed secrets.                                                                                                                                                                           |
+| **Backup sidecar** | `Dockerfile-backup` in standalone compose; operational, not user-facing.                                                                                                                                                                                                                                 |
+| **Dev-only**       | `bin/serve_ui`, tests, `live_test/`, local `.venv`. Exclude from SAST paths unless checking for committed secrets.                                                                                                                                                                                       |
 
 Operational docs to cross-check while writing `FINAL_ASSESSMENT.md`:
 
@@ -227,19 +227,19 @@ Do **not** treat hadolint on sync as a "user-facing" finding unless it affects i
 
 Primary stack is Python (`pyproject.toml` / `uv.lock`). The UI also ships a **prebuilt** npm bundle for the cookie component (lockfile at `ui/custom/cookie/frontend/package-lock.json`; `node_modules/` is gitignored). Required tools:
 
-| Category   | Tool          | Command (run from repo root)                                                                                                                                       |
-| ---------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| SAST       | `bandit`      | `bandit -r lib ui administration -f json -o security-report/runs/$RUN_ID/sast/bandit.json --severity-level low --confidence-level low --exclude .venv,venv,tests,security-report` |
-| SAST       | `semgrep`     | `semgrep scan --config auto --sarif -o security-report/runs/$RUN_ID/sast/semgrep.sarif --metrics=off --error=false lib ui administration release`                                 |
-| SCA        | `pip-audit`   | `pip-audit -f json -o security-report/runs/$RUN_ID/sca/pip-audit.json` (uses `pyproject.toml` / lock)                                                                             |
-| SCA        | `osv-scanner` | `osv-scanner scan --recursive --format sarif --output security-report/runs/$RUN_ID/sca/osv.sarif .`                                                                               |
+| Category   | Tool          | Command (run from repo root)                                                                                                                                                                  |
+| ---------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SAST       | `bandit`      | `bandit -r lib ui administration -f json -o security-report/runs/$RUN_ID/sast/bandit.json --severity-level low --confidence-level low --exclude .venv,venv,tests,security-report`             |
+| SAST       | `semgrep`     | `semgrep scan --config auto --sarif -o security-report/runs/$RUN_ID/sast/semgrep.sarif --metrics=off --error=false lib ui administration release`                                             |
+| SCA        | `pip-audit`   | `pip-audit -f json -o security-report/runs/$RUN_ID/sca/pip-audit.json` (uses `pyproject.toml` / lock)                                                                                         |
+| SCA        | `osv-scanner` | `osv-scanner scan --recursive --format sarif --output security-report/runs/$RUN_ID/sca/osv.sarif .`                                                                                           |
 | SCA        | `trivy fs`    | `trivy fs . --format sarif --output security-report/runs/$RUN_ID/sca/trivy-fs.sarif --scanners vuln,misconfig --skip-dirs .venv,security-report,tests,ui/custom/cookie/frontend/node_modules` |
-| SCA (opt.) | `npm audit`   | `cd ui/custom/cookie/frontend && npm audit --package-lock-only --json > ../../../../security-report/runs/$RUN_ID/sca/npm-cookie-audit.json` (no `npm install`; uses committed lockfile) |
-| Secrets    | `gitleaks`    | `gitleaks detect --no-banner --redact --report-format sarif --report-path security-report/runs/$RUN_ID/secrets/gitleaks.sarif`                                                    |
-| Secrets    | `trufflehog`  | `trufflehog filesystem . --json --no-update > security-report/runs/$RUN_ID/secrets/trufflehog.jsonl`                                                                              |
-| IaC        | `actionlint`  | `actionlint -format '{{json .}}' > security-report/runs/$RUN_ID/iac/actionlint.json`                                                                                              |
-| Containers | `hadolint`    | Per production Dockerfile under `release/`                                                                                                                         |
-| SBOM       | `syft`        | `syft . -o cyclonedx-json=security-report/runs/$RUN_ID/sbom/cyclonedx.json -o spdx-json=security-report/runs/$RUN_ID/sbom/spdx.json` (create `sbom/` under the run dir first) |
+| SCA (opt.) | `npm audit`   | `cd ui/custom/cookie/frontend && npm audit --package-lock-only --json > ../../../../security-report/runs/$RUN_ID/sca/npm-cookie-audit.json` (no `npm install`; uses committed lockfile)       |
+| Secrets    | `gitleaks`    | `gitleaks detect --no-banner --redact --report-format sarif --report-path security-report/runs/$RUN_ID/secrets/gitleaks.sarif`                                                                |
+| Secrets    | `trufflehog`  | `trufflehog filesystem . --json --no-update > security-report/runs/$RUN_ID/secrets/trufflehog.jsonl`                                                                                          |
+| IaC        | `actionlint`  | `actionlint -format '{{json .}}' > security-report/runs/$RUN_ID/iac/actionlint.json`                                                                                                          |
+| Containers | `hadolint`    | Per production Dockerfile under `release/`                                                                                                                                                    |
+| SBOM       | `syft`        | `syft . -o cyclonedx-json=security-report/runs/$RUN_ID/sbom/cyclonedx.json -o spdx-json=security-report/runs/$RUN_ID/sbom/spdx.json` (create `sbom/` under the run dir first)                 |
 
 **Not required** for this repo: repo-root `npm audit`, `govulncheck`, `kube-linter`, `checkov` (no Terraform/K8s app manifests), `brakeman`, etc.
 
@@ -266,15 +266,15 @@ Use `security-report/tools/normalize_findings.py` after scans to produce `findin
 
 ## 7. LLM-friendly artefacts (prefer over HTML)
 
-| Artefact                                 | Format   | Use                                   |
-| ---------------------------------------- | -------- | ------------------------------------- |
-| `index.json`                             | JSON     | All runs: ids, counts, paths (tracked) |
-| `runs/<RUN_ID>/findings.json`            | JSON     | Machine merge, delta, agent reasoning |
-| `runs/<RUN_ID>/summary.json`             | JSON     | Counts, `by_surface`, delta, sbom SHA   |
-| `runs/<RUN_ID>/FINAL_ASSESSMENT.md`      | Markdown | Verdict for that run                  |
-| `runs/<RUN_ID>/llm-brief.md`             | Markdown | Fast orientation (~50 lines; tracked) |
-| `runs/<RUN_ID>/sast/bandit.json`         | JSON     | Detailed SAST                         |
-| `runs/<RUN_ID>/sbom/cyclonedx.json`      | JSON     | Supply chain inventory (gitignored)   |
+| Artefact                            | Format   | Use                                    |
+| ----------------------------------- | -------- | -------------------------------------- |
+| `index.json`                        | JSON     | All runs: ids, counts, paths (tracked) |
+| `runs/<RUN_ID>/findings.json`       | JSON     | Machine merge, delta, agent reasoning  |
+| `runs/<RUN_ID>/summary.json`        | JSON     | Counts, `by_surface`, delta, sbom SHA  |
+| `runs/<RUN_ID>/FINAL_ASSESSMENT.md` | Markdown | Verdict for that run                   |
+| `runs/<RUN_ID>/llm-brief.md`        | Markdown | Fast orientation (~50 lines; tracked)  |
+| `runs/<RUN_ID>/sast/bandit.json`    | JSON     | Detailed SAST                          |
+| `runs/<RUN_ID>/sbom/cyclonedx.json` | JSON     | Supply chain inventory (gitignored)    |
 
 Avoid asking agents to parse large SARIF or HTML unless necessary. If you extend normalization, add SARIF-to-JSON converters into `findings.json` rather than pointing agents at `trivy-fs.sarif`.
 
@@ -376,7 +376,7 @@ For each issue:
 
 Use code and docs; do not rely on scanners alone.
 
-1. **Authentication** — local password policy, `UI_TMP_ADMIN_PASSWORD` bootstrap, OIDC state/nonce, session cookie flags, idle timeout (`UI_JWT_EXPIRATION_MINUTES`).
+1. **Authentication** — local password policy, `admin_passwd` bootstrap (unknown hash until set), OIDC state/nonce, session cookie flags, idle timeout (`UI_JWT_EXPIRATION_MINUTES`).
 2. **Authorization** — report visibility (`can_access_report`), admin pages, group-scoped output paths under `REPORT_OUT_DIR`.
 3. **Session management** — cookie vs `st.session_state`, logout, session fixation (see `ui/services/session/IMPORTANT.md`). Include **`ui/custom/cookie`**: production uses `frontend/build` only; verify `COOKIE_COMPONENT_DEV_URL` is unset in prod; review bundled JS for cookie flags (`secure`, `sameSite`, path).
 4. **Injection** — SQLAlchemy/raw SQL in UI-facing queries; report parameter handling into `lib._report.generator`.

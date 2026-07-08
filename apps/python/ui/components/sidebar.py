@@ -3,8 +3,9 @@ from __future__ import annotations
 import streamlit as st
 
 from ui.components.home_logo_link import render_home_logo_link
+from ui.services.config_service import has_required_ui_privx_values_configured
 from ui.services.auth.oidc_logout import logout_user
-from ui.services.permissions import is_admin
+from ui.services.permissions import is_admin, is_privx_user, is_superadmin_username
 from ui.services.report_view_resolver import ResolvedView, get_resolved_report_views
 from ui.services.session import keys, session_manager
 from ui.utils.string import normalize_name
@@ -55,33 +56,37 @@ def render_sidebar() -> None:
                 st.caption(f"Logged in as **{display_name}**")
 
         st.title("Reports")
-
-        if st.button("Report Files", key="report_files_button", width="stretch"):
-            st.switch_page("pages/_3_Report_Files.py")
-
-        resolved_views = get_resolved_report_views()
-        if not resolved_views:
-            st.info("No reports available for your account.")
+        has_required_config = has_required_ui_privx_values_configured()
+        if not has_required_config:
+            st.warning("Reports are unavailable. Required UI/PrivX app configuration values are missing.")
         else:
-            selected_name = st.session_state.get(keys.SELECTED_ALT_GROUP_VIEW, "Default")
-            selected_names = [view["name"] for view in resolved_views]
-            if selected_name not in selected_names:
-                selected_name = selected_names[0]
+            resolved_views = get_resolved_report_views()
+            if not resolved_views:
+                st.info("No reports available for your account.")
+            else:
+                if st.button("Report Files", key="report_files_button", width="stretch"):
+                    st.switch_page("pages/_3_Report_Files.py")
 
-            selected_name = st.selectbox(
-                "Report View",
-                options=selected_names,
-                index=selected_names.index(selected_name),
-                key="report_group_view_picker",
-            )
-            st.session_state[keys.SELECTED_ALT_GROUP_VIEW] = selected_name
+                selected_name = st.session_state.get(keys.SELECTED_ALT_GROUP_VIEW, "Default")
+                selected_names = [view["name"] for view in resolved_views]
+                if selected_name not in selected_names:
+                    selected_name = selected_names[0]
 
-            selected_view = next(view for view in resolved_views if view["name"] == selected_name)
-            _render_report_tree(selected_view)
+                selected_name = st.selectbox(
+                    "Report View",
+                    options=selected_names,
+                    index=selected_names.index(selected_name),
+                    key="report_group_view_picker",
+                )
+                st.session_state[keys.SELECTED_ALT_GROUP_VIEW] = selected_name
+
+                selected_view = next(view for view in resolved_views if view["name"] == selected_name)
+                _render_report_tree(selected_view)
 
         # Administration section (admin-only)
         if is_admin():
             st.title("Administration")
+            is_superadmin = is_superadmin_username(st.session_state.get(keys.USERNAME))
             if st.button("Dashboard", key="dashboard_button", width="stretch"):
                 st.switch_page("pages/Admin_Dashboard.py")
             if st.button("Sync Status", key="sync_status_button", width="stretch"):
@@ -92,6 +97,8 @@ def render_sidebar() -> None:
                 st.switch_page("pages/Admin_User_Groups.py")
             if st.button("Report Groups", key="report_groups_button", width="stretch"):
                 st.switch_page("pages/Admin_Report_Group.py")
+            if is_superadmin and st.button("App Configuration", key="app_config_button", width="stretch"):
+                st.switch_page("pages/Admin_App_Config.py")
 
         # Account section
         st.title("Account")
@@ -105,6 +112,10 @@ def render_sidebar() -> None:
             logout_label = "Log out of IdP"
         else:
             logout_label = "Logout"
+
+        if is_privx_user():
+            if st.button("My Page", key="my_page_button", width="stretch"):
+                st.switch_page("pages/_4_User.py")
 
         has_profile = st.session_state.get(keys.HAS_PROFILE)
         if is_admin() or has_profile is True:

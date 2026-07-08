@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
-import os
 from typing import TYPE_CHECKING
 
 import streamlit as st
 from streamlit.logger import get_logger
 
+from lib import env_oidc
 from ui.db import session_repo
 from ui.db.user_queries import get_user
 from ui.services.auth.oidc_claims import extract_id_token_exp
@@ -37,13 +37,10 @@ def _preview(token: str | None) -> str:
 
 
 def _allowed_auth_sources() -> set[str]:
-    raw = os.getenv("UI_AUTH_MODE", "local").strip().lower()
-    modes = {mode.strip() for mode in raw.split(",") if mode.strip()}
-    if not modes:
-        modes = {"local"}
-
-    allowed = {"local"} if "local" in modes else set()
-    allowed.update(f"oidc:{provider}" for provider in modes if provider not in {"local", "oidc"})
+    """Return set of allowed auth sources: 'local' plus any enabled OIDC providers."""
+    allowed = {"local"}
+    for slot in env_oidc.get_enabled_slots():
+        allowed.add(f"oidc:{slot}")
     return allowed
 
 
@@ -110,7 +107,7 @@ def restore_session() -> bool:
     grace_active = _cookie_sync_grace_active()
     memory_token = str(in_memory_token) if in_memory_token else None
 
-    logger.info(
+    logger.debug(
         "restore_session: start has_cookie_token=%s has_memory_token=%s authenticated=%s grace_active=%s",
         bool(cookie_token),
         bool(memory_token),
@@ -339,7 +336,7 @@ def restore_session() -> bool:
     st.session_state[keys.SESSION_TOKEN] = token
     st.session_state["auth_source"] = auth_source
 
-    logger.info(
+    logger.debug(
         "restore_session: success user_id=%s auth_source=%s",
         user["id"],
         auth_source,

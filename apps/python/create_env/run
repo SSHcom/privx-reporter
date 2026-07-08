@@ -1,0 +1,4 @@
+#!/bin/bash
+# Dev implementation script for create-env.
+
+uv run python -m create_env._create_env "$@"

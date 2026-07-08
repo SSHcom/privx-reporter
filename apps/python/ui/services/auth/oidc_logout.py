@@ -1,27 +1,27 @@
 from __future__ import annotations
 
-import os
 from urllib.parse import urlencode
 
 import requests
 import streamlit as st
 
+from lib import env_oidc
 
-def _resolve_provider_name(auth_source: str | None) -> str | None:
+
+def _resolve_provider_slot(auth_source: str | None) -> int | None:
     if not auth_source:
         return None
     if auth_source.startswith("oidc:"):
-        provider = auth_source.split(":", 1)[1].strip()
-        return provider or None
+        slot_str = auth_source.split(":", 1)[1].strip()
+        if slot_str in {"1", "2"}:
+            return int(slot_str)
     return None
 
 
-def _build_oidc_logout_url(*, provider_name: str) -> str | None:
-    prefix = f"{provider_name.upper()}_"
-
-    issuer = os.getenv(f"{prefix}OIDC_ISSUER", "").rstrip("/")
-    client_id = os.getenv(f"{prefix}OIDC_CLIENT_ID", "")
-    post_logout_redirect_uri = os.getenv(f"{prefix}OIDC_POST_LOGOUT_REDIRECT_URI", "")
+def _build_oidc_logout_url(*, slot: int) -> str | None:
+    issuer = env_oidc.get_provider_issuer(slot)
+    client_id = env_oidc.get_provider_client_id(slot)
+    post_logout_redirect_uri = env_oidc.get_provider_post_logout_redirect_uri(slot)
 
     if not issuer or not client_id or not post_logout_redirect_uri:
         return None
@@ -58,8 +58,8 @@ def logout_user() -> None:
     from ui.services.session.state import clear_authenticated_state
 
     auth_source = st.session_state.get("auth_source")
-    provider_name = _resolve_provider_name(auth_source)
-    logout_url = _build_oidc_logout_url(provider_name=provider_name) if provider_name else None
+    slot = _resolve_provider_slot(auth_source)
+    logout_url = _build_oidc_logout_url(slot=slot) if slot else None
 
     session_manager.end_session()
 

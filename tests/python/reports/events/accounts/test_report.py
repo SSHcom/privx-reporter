@@ -223,8 +223,7 @@ def test_accounts_extracts_multiple_principals(
 ) -> None:
     with (
         patch(
-            "reports.events.accounts.report._fetch_events",
-            return_value=[_account_event_with_two_added_principals()]
+            "reports.events.accounts.report._fetch_events", return_value=[_account_event_with_two_added_principals()]
         ),
         patch("reports.events.accounts.report.write_report_output") as mock_write_report_output,
     ):

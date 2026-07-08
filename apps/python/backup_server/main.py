@@ -10,26 +10,27 @@ import os
 import time
 
 from backup_server.dump import run_dump_cycle
-from lib.env_backup import parse_backup_config
+from lib.env_backup import BACKUP_DIR, default_backup_dir, parse_backup_config
+from lib.service.env_source import reloadEnv
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-BACKUP_DIR_ENV = "BACKUP_DIR"
-DEFAULT_BACKUP_DIR = "/opt/reporter/.backup"
-
-# When disabled, sleep in long chunks to stay alive without busy-looping.
-DISABLED_SLEEP_SECONDS = 3600
+CONFIG_CHECK_INTERVAL_SECONDS = 300
 
 
 def main() -> None:
     config = parse_backup_config()
-    backup_dir = os.getenv(BACKUP_DIR_ENV, DEFAULT_BACKUP_DIR)
+    backup_dir = os.getenv(BACKUP_DIR) or default_backup_dir()
 
     if not config.enabled:
         logger.info("Backups disabled via BACKUP_CONFIG; idling.")
         while True:
-            time.sleep(DISABLED_SLEEP_SECONDS)
+            time.sleep(CONFIG_CHECK_INTERVAL_SECONDS)
+            reloadEnv()
+            config = parse_backup_config()
+            if config.enabled:
+                break
 
     interval_seconds = config.interval_minutes * 60
     logger.info(

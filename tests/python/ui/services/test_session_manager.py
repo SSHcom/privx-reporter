@@ -95,8 +95,8 @@ def test_start_session_rejects_local_auth_source_with_oidc_material(
 
 
 @pytest.mark.unit
-def test_start_session_rejects_auth_source_not_in_config(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Session start should reject auth sources not enabled in UI_AUTH_MODE."""
+def test_start_session_rejects_auth_source_not_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Session start should reject auth sources for disabled OIDC providers."""
     st_stub = _make_streamlit_stub()
     create_session = MagicMock()
     set_cookie = MagicMock()
@@ -104,10 +104,10 @@ def test_start_session_rejects_auth_source_not_in_config(monkeypatch: pytest.Mon
     monkeypatch.setattr(session_manager, "st", st_stub)
     monkeypatch.setattr(session_manager.session_repo, "create_session", create_session)
     monkeypatch.setattr(session_manager, "_set_session_cookie", set_cookie)
-    monkeypatch.setenv("UI_AUTH_MODE", "local,entra")
+    monkeypatch.setenv("OIDC_2_ENABLED", "true")
 
-    with pytest.raises(ValueError, match="Unsupported auth_source: oidc:keycloak"):
-        session_manager.start_session(user_id=42, auth_source="oidc:keycloak", token_factory=lambda: "opaque-token")
+    with pytest.raises(ValueError, match="Unsupported auth_source: oidc:1"):
+        session_manager.start_session(user_id=42, auth_source="oidc:1", token_factory=lambda: "opaque-token")
 
     create_session.assert_not_called()
     set_cookie.assert_not_called()
@@ -125,12 +125,12 @@ def test_start_session_rejects_oidc_auth_source_without_required_tokens(
     monkeypatch.setattr(session_manager, "st", st_stub)
     monkeypatch.setattr(session_manager.session_repo, "create_session", create_session)
     monkeypatch.setattr(session_manager, "_set_session_cookie", set_cookie)
-    monkeypatch.setenv("UI_AUTH_MODE", "local,entra")
+    monkeypatch.setenv("OIDC_2_ENABLED", "true")
 
     with pytest.raises(ValueError, match="OIDC sessions require oidc_refresh_token"):
         session_manager.start_session(
             user_id=42,
-            auth_source="oidc:entra",
+            auth_source="oidc:2",
             oidc_access_token="access-token",
             oidc_access_expires_at=dt.datetime.now(dt.UTC) + dt.timedelta(seconds=300),
             oidc_refresh_expires_at=dt.datetime.now(dt.UTC) + dt.timedelta(seconds=600),
@@ -153,11 +153,11 @@ def test_start_session_accepts_consistent_oidc_auth_state(monkeypatch: pytest.Mo
     monkeypatch.setattr(session_manager, "st", st_stub)
     monkeypatch.setattr(session_manager.session_repo, "create_session", create_session)
     monkeypatch.setattr(session_manager, "_set_session_cookie", set_cookie)
-    monkeypatch.setenv("UI_AUTH_MODE", "local,entra")
+    monkeypatch.setenv("OIDC_2_ENABLED", "true")
 
     token = session_manager.start_session(
         user_id=42,
-        auth_source="oidc:entra",
+        auth_source="oidc:2",
         oidc_access_token="access-token",
         oidc_refresh_token="refresh-token",
         oidc_access_expires_at=access_expires_at,
@@ -170,7 +170,7 @@ def test_start_session_accepts_consistent_oidc_auth_state(monkeypatch: pytest.Mo
     create_session.assert_called_once_with(
         user_id=42,
         token="opaque-token",
-        auth_source="oidc:entra",
+        auth_source="oidc:2",
         oidc_access_token="access-token",
         oidc_refresh_token="refresh-token",
         oidc_access_expires_at=access_expires_at,
@@ -189,7 +189,7 @@ def test_restore_session_hydrates_authenticated_state_from_cookie(monkeypatch: p
 
     monkeypatch.setattr(session_manager, "st", st_stub)
     monkeypatch.setattr(session_manager, "get_session_token", lambda: "opaque-token")
-    monkeypatch.setenv("UI_AUTH_MODE", "local,entra")
+    monkeypatch.setenv("OIDC_2_ENABLED", "true")
     monkeypatch.setattr(
         session_manager.session_repo,
         "get_session_by_token",
@@ -405,7 +405,7 @@ def test_restore_session_ends_session_for_auth_source_not_in_config(
 
     monkeypatch.setattr(session_manager, "st", st_stub)
     monkeypatch.setattr(session_manager, "get_session_token", lambda: "opaque-token")
-    monkeypatch.setenv("UI_AUTH_MODE", "local,entra")
+    monkeypatch.setenv("OIDC_2_ENABLED", "true")
     monkeypatch.setattr(
         session_manager.session_repo,
         "get_session_by_token",
@@ -413,7 +413,7 @@ def test_restore_session_ends_session_for_auth_source_not_in_config(
             "id": 7,
             "user_id": 99,
             "token_jti": token,
-            "auth_source": "oidc:keycloak",
+            "auth_source": "oidc:1",
             "updated": dt.datetime.now(dt.UTC),
         },
     )
@@ -443,7 +443,7 @@ def test_restore_session_allows_oidc_session_when_refresh_expiry_missing(
 
     monkeypatch.setattr(session_manager, "st", st_stub)
     monkeypatch.setattr(session_manager, "get_session_token", lambda: "opaque-token")
-    monkeypatch.setenv("UI_AUTH_MODE", "local,entra")
+    monkeypatch.setenv("OIDC_2_ENABLED", "true")
     monkeypatch.setattr(
         session_manager.session_repo,
         "get_session_by_token",
@@ -451,7 +451,7 @@ def test_restore_session_allows_oidc_session_when_refresh_expiry_missing(
             "id": 7,
             "user_id": 99,
             "token_jti": token,
-            "auth_source": "oidc:entra",
+            "auth_source": "oidc:2",
             "oidc_access_token": "access-token",
             "oidc_refresh_token": "refresh-token",
             "oidc_id_token": "id-token",

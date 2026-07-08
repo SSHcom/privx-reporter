@@ -1,4 +1,0 @@
-#!/bin/bash
-# Dev implementation script for create-env (Stage 3 target: apps/python/lib/interactive/env/run).
-
-uv run create-env "$@"

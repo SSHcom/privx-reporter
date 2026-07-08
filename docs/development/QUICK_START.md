@@ -121,7 +121,13 @@ Run a few reports to test if we can connect to both PrivX and the database.
 - Run: `bin/serve_ui`
 - Open `http://localhost:8501` in the browser
 
-When running with a fresh admin database, an `admin` user is created automatically. The initial password is read from `UI_TMP_ADMIN_PASSWORD`. Change it immediately after first login.
+On a fresh admin database, bootstrap creates an `admin` user with a random password hash that is not stored. Before the first login, set a known password (with the UI and admin database running and `.env` database settings correct):
+
+```sh
+bin/admin_passwd
+```
+
+Sign in as `admin` with the password you set.
 
 ### UI usage notes
 

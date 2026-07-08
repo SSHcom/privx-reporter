@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import os
+import secrets
 
 from sqlalchemy import insert, select
 
@@ -13,9 +13,10 @@ from ui.utils.password import hash_password
 
 
 def sync_admin_user() -> dict[str, int]:
-    """Ensure the default admin user exists.
+    """Ensure the default admin user exists with an unknown bootstrap password.
 
-    Requires ``UI_TMP_ADMIN_PASSWORD`` to be set and non-empty.
+    The initial hash is random and not retained. Set a known password with
+    ``admin_passwd`` before first login.
     """
     db = use_database("admin")
 
@@ -32,12 +33,8 @@ def sync_admin_user() -> dict[str, int]:
         if existing_admin is not None:
             return {"inserted_admin_user": 0}
 
-        raw_password = os.environ.get("UI_TMP_ADMIN_PASSWORD", "").strip()
-
-        if not raw_password:
-            raise RuntimeError("UI_TMP_ADMIN_PASSWORD must be set to create the admin user.")
-
-        password_hash = hash_password(raw_password)
+        bootstrap_password = secrets.token_urlsafe(32)
+        password_hash = hash_password(bootstrap_password)
 
         insert_result = db.connection.execute(
             insert(UserTable),

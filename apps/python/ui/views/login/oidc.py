@@ -21,6 +21,8 @@ import requests
 import streamlit as st
 from jwt import PyJWKClient
 from streamlit.logger import get_logger
+
+from lib import env_oidc
 from ui.db.user_queries import create_oidc_user, get_user_for_login
 from ui.services.session import keys, session_manager
 from ui.services.session.state import hydrate_authenticated_state
@@ -139,31 +141,31 @@ def _get_provider_icon_svg(provider_name: str) -> str | None:
 
 
 def _env_flag(name: str, default: bool = False) -> bool:
-    return oidc_config.env_flag(name, default)
+    return env_oidc.env_flag(name, default)
 
 
 def _auto_provision_enabled() -> bool:
-    return oidc_config.auto_provision_enabled()
+    return env_oidc.auto_provision_enabled()
 
 
 def _auto_provision_require_email() -> bool:
-    return oidc_config.auto_provision_require_email()
+    return env_oidc.auto_provision_require_email()
 
 
 def _allowed_email_domains() -> set[str]:
-    return oidc_config.allowed_email_domains()
+    return env_oidc.allowed_email_domains()
 
 
 def _is_email_allowed(email: str) -> bool:
-    return oidc_config.is_email_allowed(email)
+    return env_oidc.is_email_allowed(email)
 
 
 def _group_claim_name() -> str:
-    return oidc_groups.group_claim_name()
+    return env_oidc.group_claim_name()
 
 
 def _group_mapping() -> dict[str, str]:
-    return oidc_groups.group_mapping()
+    return env_oidc.group_mapping()
 
 
 def _claim_values(claims: dict, claim_path: str) -> list[str]:
@@ -284,7 +286,8 @@ def _fetch_oidc_metadata(issuer: str) -> dict:
         ) from exc
     metadata = response.json()
     log.info(
-        "OIDC metadata endpoints authorization=%s token=%s jwks=%s end_session=%s",
+        "OIDC metadata issuer=%s authorization=%s token=%s jwks=%s end_session=%s",
+        metadata.get("issuer"),
         metadata.get("authorization_endpoint"),
         metadata.get("token_endpoint"),
         metadata.get("jwks_uri"),
@@ -314,14 +317,28 @@ def _validate_id_token(
     signing_key = jwks_client.get_signing_key_from_jwt(id_token)
     log.info("Resolved signing key kid=%s", getattr(signing_key, "key_id", None))
 
-    claims = jwt.decode(
-        id_token,
-        key=signing_key.key,
-        algorithms=["RS256", "PS256", "ES256"],
-        audience=client_id,
-        issuer=issuer,
-        options={"require": ["exp", "iat", "iss", "aud", "sub"]},
-    )
+    try:
+        claims = jwt.decode(
+            id_token,
+            key=signing_key.key,
+            algorithms=["RS256", "PS256", "ES256"],
+            audience=client_id,
+            issuer=issuer,
+            options={"require": ["exp", "iat", "iss", "aud", "sub"]},
+        )
+    except jwt.InvalidIssuerError:
+        unverified_claims = jwt.decode(
+            id_token,
+            options={"verify_signature": False, "verify_exp": False, "verify_aud": False, "verify_iss": False},
+            algorithms=["RS256", "PS256", "ES256"],
+        )
+        log.error(
+            "OIDC issuer mismatch expected_issuer=%s token_iss=%s",
+            issuer,
+            unverified_claims.get("iss"),
+        )
+        log.error("OIDC DEBUG token_claims=%s", json.dumps(unverified_claims, default=str))
+        raise
 
     token_nonce = claims.get("nonce")
     log.info(
@@ -414,7 +431,7 @@ def render_oidc_login(provider_name: str) -> None:
         elif isinstance(exc, requests.exceptions.ConnectionError):
             st.warning(
                 f"{display_name} login is unavailable: IdP is not reachable from this environment. "
-                "Check DNS/proxy/firewall or disable this provider in UI_AUTH_MODE."
+                "Check DNS/proxy/firewall or disable this provider."
             )
         elif isinstance(exc, requests.exceptions.HTTPError):
             status = getattr(getattr(exc, "response", None), "status_code", None)
@@ -477,18 +494,10 @@ def render_oidc_login(provider_name: str) -> None:
 
     display_name = _get_provider_display_name(provider_name)
     icon_svg = _get_provider_icon_svg(provider_name)
-    icon_html = (
-        '<span style="display:inline-flex; width:200px; height:2.8rem; flex:0 0 200px; '
-        'align-items:center; justify-content:center;">'
-        '<span style="display:inline-flex; width:100%; height:100%; '
-        f'align-items:center; justify-content:center;">{icon_svg}</span>'
-        "</span>"
-        if icon_svg
-        else ""
-    )
+    icon_html = f'<span style="display:inline-flex; margin-right:0.5rem;">{icon_svg}</span>' if icon_svg else ""
     label_html = (
         '<span style="display:inline-flex; align-items:center; justify-content:center; width:100%;">'
-        f"{icon_html}<span></span>"
+        f"{icon_html}<span>{html.escape(display_name)}</span>"
         "</span>"
     )
     st.markdown(
@@ -632,8 +641,20 @@ def complete_oidc_login() -> None:
         _log_flow_step(6, "state verified provider=%s", provider_name)
 
         metadata = _fetch_oidc_metadata(cfg["issuer"])
+        metadata_issuer_raw = str(metadata.get("issuer") or "").strip()
+        configured_issuer_raw = str(cfg["issuer"]).strip()
+        token_issuer = metadata_issuer_raw or configured_issuer_raw
+        metadata_issuer_norm = metadata_issuer_raw.rstrip("/")
+        configured_issuer_norm = configured_issuer_raw.rstrip("/")
+        if metadata_issuer_raw and metadata_issuer_norm != configured_issuer_norm:
+            log.warning(
+                "OIDC configured issuer differs from metadata issuer configured=%s metadata=%s",
+                configured_issuer_raw,
+                metadata_issuer_raw,
+            )
         log.info(
-            "Metadata loaded authorization=%s token=%s jwks=%s",
+            "Metadata loaded issuer=%s authorization=%s token=%s jwks=%s",
+            token_issuer,
             metadata.get("authorization_endpoint"),
             metadata.get("token_endpoint"),
             metadata.get("jwks_uri"),
@@ -701,6 +722,22 @@ def complete_oidc_login() -> None:
 
             token_response = response.json()
             log.info("Token response summary: %s", _token_response_summary(token_response))
+            if not token_response.get("refresh_token"):
+                configured_scopes = str(cfg.get("scopes", "")).strip()
+                configured_scope_set = {scope for scope in configured_scopes.split() if scope}
+                granted_scopes = str(token_response.get("scope") or "").strip()
+                granted_scope_set = {scope for scope in granted_scopes.split() if scope}
+                offline_access_configured = "offline_access" in configured_scope_set
+                offline_access_granted = "offline_access" in granted_scope_set
+                log.warning(
+                    "OIDC token response missing refresh_token. This may be caused by missing offline_access "
+                    "scope or IdP policy/app settings. configured_scopes=%s granted_scopes=%s "
+                    "offline_access_configured=%s offline_access_granted=%s",
+                    configured_scopes,
+                    granted_scopes,
+                    offline_access_configured,
+                    offline_access_granted,
+                )
 
             id_token = token_response.get("id_token")
             if not id_token:
@@ -709,7 +746,7 @@ def complete_oidc_login() -> None:
             claims = _validate_id_token(
                 id_token=str(id_token),
                 jwks_uri=metadata["jwks_uri"],
-                issuer=cfg["issuer"],
+                issuer=token_issuer,
                 client_id=cfg["client_id"],
                 expected_nonce=expected_nonce,
             )

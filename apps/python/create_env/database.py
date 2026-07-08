@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from collections.abc import Callable
 from typing import Protocol
 
-from .ask_selects import DB_TOPOLOGY_DEFAULT, DB_TOPOLOGY_OPTIONS
+from ._ask_selects import DB_TOPOLOGY_DEFAULT, DB_TOPOLOGY_OPTIONS
 
 Validator = Callable[[str], tuple[bool, str | None]]
 
@@ -29,6 +29,13 @@ class FieldDef:
     label: str
     description: str
     validator: Validator
+
+
+@dataclass(frozen=True)
+class ConfigContext:
+    skipped: frozenset[str]
+    is_standalone_install: bool
+    is_db_configured: bool
 
 
 def validate_non_empty(value: str) -> tuple[bool, str | None]:
@@ -172,23 +179,11 @@ def collect_database_values(
     defaults: dict[str, str],
     prompt_fields: PromptFields,
     ask_select: AskSelect,
-    *,
-    mode: str = "ask",
+    context: ConfigContext,
 ) -> dict[str, str]:
-    if mode == "skip":
-        print("\nSkipping database settings.")
-        return {}
-
-    if mode == "defaults":
-        print("\nUsing provided defaults from .env-example for database settings.")
-        values: dict[str, str] = {}
-        for field in [*DB_DATA_FIELDS, *DB_ADMIN_FIELDS]:
-            value = defaults.get(field.key, "").strip()
-            is_valid, message = field.validator(value)
-            if not is_valid:
-                raise ValueError(f"Missing or invalid default value for {field.key}: {message}")
-            values[field.key] = value
-        return values
+    if "db" in context.skipped:
+        print("\nSkipping database settings (using default values).")
+        return {key: defaults[key] for key in DATABASE_OUTPUT_ORDER if key in defaults}
 
     print("\nDB topology: choose whether data/admin DB use one shared instance or separate instances.")
     topology = ask_select(

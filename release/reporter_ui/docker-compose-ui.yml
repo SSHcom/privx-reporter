@@ -12,7 +12,9 @@ services:
     environment:
       REPORT_API_BATCH_SIZE: ${REPORT_API_BATCH_SIZE:-500}
       REPORT_OUT_DIR: /root/reports
-      UI_TMP_ADMIN_PASSWORD: ${UI_TMP_ADMIN_PASSWORD}
+
+      SSL_CERT: /opt/reporter/certs/fullchain.pem
+      SSL_KEY: /opt/reporter/certs/privatekey.pem
 
       PRIVX_HOSTNAME: ${PRIVX_HOSTNAME}
       PRIVX_PORT: ${PRIVX_PORT}

@@ -9,4 +9,4 @@ fi
 
 cd "$REPORTER_HOME"
 
-uv run create-env "$@"
+exec "$REPORTER_HOME/create_env/run" "$@"

@@ -70,9 +70,7 @@ def main() -> int:
     destination_dir = Path(args.destination).expanduser().resolve()
 
     if is_backup_dev_mode():
-        dump_files = (
-            [path.name for path in backup_dir.glob("*.dump")] if backup_dir.is_dir() else []
-        )
+        dump_files = [path.name for path in backup_dir.glob("*.dump")] if backup_dir.is_dir() else []
         members = archive_members(
             reporter_home,
             backup_dir,

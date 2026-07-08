@@ -10,7 +10,7 @@ WORKDIR $REPORTER_HOME
 COPY pyproject.toml uv.lock ./
 COPY release/common/security.sh ./security.sh
 COPY apps/python/ apps/python/
-COPY release/common/bin/ui bin/
+COPY release/common/bin/ui release/common/bin/admin_passwd bin/
 COPY release/reporter_ui/certs/ certs/
 
 ENV UV_LINK_MODE=copy

@@ -44,7 +44,7 @@ def get_session_token() -> str | None:
     # st.context.cookies is a read-only dict parsed from the Cookie header.
     token = st.context.cookies.get(SESSION_COOKIE_KEY)
     if token is not None:
-        logger.info(
+        logger.debug(
             "cookie_store.get_session_token: found token key=%s",
             SESSION_COOKIE_KEY,
         )
@@ -65,7 +65,7 @@ def get_session_token() -> str | None:
 
 def set_session_token(token: str) -> None:
     """Write a session token to browser cookies (iframe-based)."""
-    logger.info("cookie_store.set_session_token: setting cookie key=%s", SESSION_COOKIE_KEY)
+    logger.debug("cookie_store.set_session_token: setting cookie key=%s", SESSION_COOKIE_KEY)
     logger.debug(
         "cookie_store.set_session_token: setting cookie key=%s max_age_seconds=%s",
         SESSION_COOKIE_KEY,

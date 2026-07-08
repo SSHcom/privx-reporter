@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .database import FieldDef, PromptFields, validate_non_empty
+from .database import ConfigContext, FieldDef, PromptFields, validate_non_empty
 
 
 def validate_positive_int(value: str) -> tuple[bool, str | None]:
@@ -93,23 +93,19 @@ SYNC_OUTPUT_ORDER = [
 def collect_sync_values(
     defaults: dict[str, str],
     prompt_fields: PromptFields,
-    *,
-    mode: str = "ask",
+    context: ConfigContext,
 ) -> dict[str, str]:
-    if mode == "skip":
-        print("\nSkipping sync settings.")
+    if not context.is_standalone_install:
+        print("\nSkipping sync settings (not a standalone installation).")
         return {}
 
-    if mode == "defaults":
-        print("\nUsing provided defaults from .env-example for sync settings.")
-        values: dict[str, str] = {}
-        for field in SYNC_FIELDS:
-            value = defaults.get(field.key, "").strip()
-            is_valid, message = field.validator(value)
-            if not is_valid:
-                raise ValueError(f"Missing or invalid default value for {field.key}: {message}")
-            values[field.key] = value
-        return values
+    if context.is_db_configured:
+        print("\nSkipping sync settings (configuration stored in database).")
+        return {}
+
+    if "sync" in context.skipped:
+        print("\nSkipping sync settings (using default values).")
+        return {key: defaults[key] for key in SYNC_OUTPUT_ORDER if key in defaults}
 
     print("\nConfigure sync values:")
     return prompt_fields(SYNC_FIELDS, defaults)

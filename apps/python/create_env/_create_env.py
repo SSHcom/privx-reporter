@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Protocol, cast
 
 from lib._shared.helpers import repo_root
-from lib.interactive.env import (
+from create_env import (
     DEFAULT_OVERRIDES,
     OUTPUT_GROUPS,
     OUTPUT_ORDER,
@@ -52,23 +52,30 @@ except ImportError:  # pragma: no cover - handled with fallback prompts
     questionary = None
 
 type SelectOptions = list[tuple[str, str]]
-type SectionModeArg = str | None
 
 
-def parse_env_defaults(template_path: Path) -> dict[str, str]:
+def parse_env_defaults(env_path: Path) -> dict[str, str]:
     if dotenv_values is None:
         raise RuntimeError("python-dotenv is required. Install it to parse .env-example values.")
 
-    defaults: dict[str, str] = {}
     valid_keys = set(OUTPUT_ORDER)
-    parsed_values = dotenv_values(template_path)
+    defaults: dict[str, str] = {}
+    parsed_values = dotenv_values(env_path)
     for key, value in parsed_values.items():
         if key not in valid_keys:
             continue
         defaults[key] = value if value is not None else ""
+    return defaults
+
+
+def resolve_default_values(template_path: Path, target_env_path: Path) -> dict[str, str]:
+    defaults = parse_env_defaults(template_path)
+    if target_env_path.exists():
+        # Use existing target values as prompt defaults when present.
+        defaults.update(parse_env_defaults(target_env_path))
 
     for key, value in DEFAULT_OVERRIDES.items():
-        defaults.setdefault(key, value)
+        defaults.setdefault(key, value)  # Set default values for keys that are not in the template file.
     return defaults
 
 
@@ -206,28 +213,11 @@ def main() -> int:
         help="Default output path used as pre-filled value in prompt (default: .env).",
     )
     parser.add_argument(
-        "--db",
-        choices=["defaults", "skip"],
-        help=(
-            "Database section mode: defaults=use .env-example values without prompting, "
-            "skip=omit DB values from output."
-        ),
-    )
-    parser.add_argument(
-        "--sync",
-        choices=["defaults", "skip"],
-        help=(
-            "Sync section mode: defaults=use .env-example values without prompting, "
-            "skip=omit SYNC_* values from output."
-        ),
-    )
-    parser.add_argument(
-        "--ui",
-        choices=["defaults", "skip"],
-        help=(
-            "UI section mode: defaults=use .env-example values (still prompts for UI_TMP_ADMIN_PASSWORD), "
-            "skip=omit UI_* values from output."
-        ),
+        "--skip",
+        nargs="*",
+        choices=["db", "sync", "ui", "backup", "privx"],
+        default=[],
+        help="Skip specified configuration groups (e.g., --skip db sync).",
     )
     args = parser.parse_args()
 
@@ -237,31 +227,31 @@ def main() -> int:
         return 1
 
     try:
-        defaults = parse_env_defaults(template_path)
-    except RuntimeError as error:
-        print(str(error), file=sys.stderr)
-        return 1
-    try:
         default_output_path = resolve_default_output_path(args.output)
         output_path = choose_output_path(default_output_path)
-        db_mode: SectionModeArg = args.db
-        sync_mode: SectionModeArg = args.sync
-        ui_mode: SectionModeArg = args.ui
+        output_exists = output_path.exists()
+        if output_exists:
+            print("\nTarget .env file status:")
+            print(f"1. {output_path} exists.")
+            print("2. Existing values will be used as defaults for prompts.")
+        defaults = resolve_default_values(template_path, output_path)
+        skipped = frozenset(args.skip) if args.skip else frozenset()
         values = collect_env_values(
             defaults,
             prompt_fields,
             ask_select,
-            db_mode=db_mode or "ask",
-            sync_mode=sync_mode or "ask",
-            ui_mode=ui_mode or "ask",
+            skipped=skipped,
         )
-
+    except RuntimeError as error:
+        print(str(error), file=sys.stderr)
+        return 1
+    try:
         print_summary(values, output_path)
         if not ask_confirm("Write these values to file?", default=True):
             print("Cancelled: no file written.")
             return 0
 
-        if output_path.exists() and not ask_confirm(f"{output_path} exists. Overwrite it?", default=False):
+        if output_exists and not ask_confirm(f"{output_path} exists. Overwrite it?", default=False):
             print("Cancelled: existing file kept unchanged.")
             return 0
 
@@ -269,11 +259,6 @@ def main() -> int:
         output_path.write_text(render_env(values), encoding="utf-8")
         print(f"Wrote configuration to {output_path}")
         return 0
-    except ValueError as error:
-        if args.db == "defaults" or args.sync == "defaults" or args.ui == "defaults":
-            print(str(error), file=sys.stderr)
-            return 1
-        raise
     except KeyboardInterrupt:
         print("\nCancelled by user.")
         return 130

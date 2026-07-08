@@ -21,7 +21,7 @@ Run post-install validation checks and apply security package pins:
 
 Create the "/opt/reporter/.env" file:
 
-  create_env --sync skip --ui skip
+  create_env --skip sync ui
 
 Create report output directory:
 

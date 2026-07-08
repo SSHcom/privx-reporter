@@ -77,12 +77,17 @@ def build_pg_dump_command(target: DatabaseTarget, output_path: Path) -> list[str
     """Build the pg_dump argv for a custom-format (-Fc) dump."""
     return [
         "pg_dump",
-        "-h", target.host,
-        "-p", str(target.port),
-        "-U", target.user,
-        "-d", target.name,
+        "-h",
+        target.host,
+        "-p",
+        str(target.port),
+        "-U",
+        target.user,
+        "-d",
+        target.name,
         "-Fc",
-        "-f", str(output_path),
+        "-f",
+        str(output_path),
     ]
 
 

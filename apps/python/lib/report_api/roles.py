@@ -122,6 +122,113 @@ def search_roles(
     return result
 
 
+def search_users(
+    api: privx_api.PrivXAPI,
+    search_payload: dict[Any, Any],
+    offset: int = 0,
+    limit: int = 0,
+    sort_key: str | None = None,
+    sort_dir: str | None = None,
+) -> dict[Any, Any] | None:
+    """
+    Search users via role store with optional pagination parameters.
+
+    Args:
+        api: PrivX API client instance
+        search_payload: Search payload dictionary
+        offset: Starting offset for pagination (default: 0)
+        limit: Maximum number of items to return (default: 0 = all)
+        sort_key: Sort field (e.g. "principal")
+        sort_dir: Sort direction ("asc" or "desc")
+
+    Returns:
+        dict: Response data containing user information with 'items' and 'count' keys.
+    """
+    try:
+        if limit == 0:
+            response = api.search_users(
+                sort_key=sort_key,
+                sort_dir=sort_dir,
+                search_payload=search_payload,
+            )
+        else:
+            response = api.search_users(
+                offset=offset,
+                limit=limit,
+                sort_key=sort_key,
+                sort_dir=sort_dir,
+                search_payload=search_payload,
+            )
+    except privx_api.exceptions.InternalAPIException as e:
+        handle_http_5xx_error(e, "search_users")
+
+    data = get_response_data(response, "search_users")
+    if data is None:
+        return None
+    result: dict[Any, Any] = data
+    return result
+
+
+def get_all_users(
+    api: privx_api.PrivXAPI,
+    search_payload: dict[Any, Any] | None = None,
+    sort_key: str | None = "principal",
+    sort_dir: str | None = "asc",
+) -> list[dict[Any, Any]]:
+    """
+    Get all users via paginated role-store search.
+
+    Args:
+        api: PrivX API client instance
+        search_payload: Search payload dictionary (default: empty dict)
+        sort_key: Sort field for stable pagination (default: "principal")
+        sort_dir: Sort direction (default: "asc")
+
+    Returns:
+        list: List of all user dictionaries.
+    """
+    all_items: list[dict[Any, Any]] = []
+    offset = 0
+    limit = 100
+    payload = search_payload or {}
+
+    while True:
+        data = search_users(
+            api,
+            search_payload=payload,
+            offset=offset,
+            limit=limit,
+            sort_key=sort_key,
+            sort_dir=sort_dir,
+        )
+        if data is None:
+            break
+
+        items = list(data.get("items", []))
+        total_count = int(data.get("count", 0) or 0)
+
+        if not items:
+            break
+
+        all_items.extend(items)
+        logger.info(
+            "Fetched %s users (offset=%s, total so far=%s, response_count=%s)",
+            len(items),
+            offset,
+            len(all_items),
+            total_count,
+        )
+
+        if total_count > 0 and len(all_items) >= total_count:
+            break
+
+        # Advance by actual returned size in case backend caps page size.
+        offset += len(items)
+
+    logger.info("Total users fetched: %s", len(all_items))
+    return all_items
+
+
 def get_role_members(
     api: privx_api.PrivXAPI,
     role_id: str,

@@ -27,7 +27,11 @@ This split is important: database/bootstrap sync runs before Streamlit serves re
 4. `sync_default_oidc_group()`
    - ensures non-privileged default OIDC group (`viewer`) exists
 5. `sync_admin_user()`
-   - ensures bootstrap admin account exists
+   - ensures bootstrap `admin` account exists (unknown random password hash)
+   - set a login password with `bin/admin_passwd` in development, or
+     `docker exec -it reporter-ui /opt/reporter/bin/admin_passwd` in production
+     (see [Quick Start](../QUICK_START.md) and [standalone](../../operations/install/STANDALONE.md) /
+     [distributed](../../operations/install/DISTRIBUTED.md) install guides)
 
 ## Why It Matters
 
@@ -59,7 +63,7 @@ If you add/remove reports, ensure combined config (run `task combine-configs`) i
 Bootstrap and runtime depend on:
 
 - admin/data DB environment variables,
-- UI variables (for example bootstrap admin/session settings),
+- UI session variables (for example `UI_JWT_EXPIRATION_MINUTES`),
 - OIDC variables when OIDC providers are enabled.
 
 See:

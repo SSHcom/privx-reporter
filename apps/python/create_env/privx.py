@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from .ask_selects import CA_CERT_MODE_DEFAULT, CA_CERT_MODE_OPTIONS
-from .database import AskSelect, FieldDef, PromptFields, validate_non_empty, validate_port
+from ._ask_selects import CA_CERT_MODE_DEFAULT, CA_CERT_MODE_OPTIONS
+from .database import AskSelect, ConfigContext, FieldDef, PromptFields, validate_non_empty, validate_port
 
 
 PRIVX_FIELDS = [
@@ -72,7 +72,12 @@ def collect_privx_values(
     defaults: dict[str, str],
     prompt_fields: PromptFields,
     ask_select: AskSelect,
+    context: ConfigContext,
 ) -> dict[str, str]:
+    if context.is_db_configured:
+        print("\nSkipping PrivX settings (configuration stored in database).")
+        return {}
+
     print("\nConfigure PrivX values:")
     values = prompt_fields(PRIVX_FIELDS, defaults)
 

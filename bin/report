@@ -6,4 +6,6 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(realpath "$script_dir/..")"
 
+export PYTHONPATH="$repo_root/apps/python${PYTHONPATH:+:$PYTHONPATH}"
+
 exec "$repo_root/apps/python/reports/run" "$@"

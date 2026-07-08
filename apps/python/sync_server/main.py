@@ -15,18 +15,48 @@ from lib.database import init_databases
 from lib.database.sync import run_trend_sync, sync_audit_events, sync_connections
 from lib.database.sync.concurrent import sync_concurrent_stats
 from lib.database.sync.trend import DEFAULT_TREND_DAYS, TrendAPI
+from lib.env import EnvConfig
 from lib.env_sync import (
     AUDIT_EVENT_SOURCE,
     CONCURRENT_SOURCE,
     CONNECTION_SOURCE,
     TREND_SOURCE,
     SyncConfig,
+    check_sync_config_ready,
 )
+from lib.service.env_source import reloadEnv
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 logger = logging.getLogger(__name__)
+
+CONFIG_CHECK_INTERVAL_SECONDS = 60
+
+
+def wait_for_config() -> None:
+    """Wait for required configuration when ENV_SOURCE=db.
+
+    Loops until required sync configuration is available in the database.
+    This allows the server to start even when config is not yet set,
+    waiting for the admin to configure it via the UI.
+    """
+    if EnvConfig.get_env_source() != "db":
+        return
+
+    while True:
+        reloadEnv()
+        is_ready, missing = check_sync_config_ready()
+        if is_ready:
+            logger.info("Required configuration is available, proceeding with startup")
+            return
+
+        logger.warning(
+            "Waiting for configuration via Admin UI. Missing: %s. Retrying in %d seconds...",
+            ", ".join(missing),
+            CONFIG_CHECK_INTERVAL_SECONDS,
+        )
+        time.sleep(CONFIG_CHECK_INTERVAL_SECONDS)
 
 
 def _sync_trend_daily_if_due(
@@ -67,6 +97,9 @@ def _sync_trend_daily_if_due(
 def main() -> None:
     """Main server loop."""
     logger.info("Starting sync server...")
+
+    # Wait for required configuration when using database config source
+    wait_for_config()
 
     _stop_event = threading.Event()
     try:

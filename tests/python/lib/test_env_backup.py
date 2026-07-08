@@ -1,20 +1,29 @@
 """Tests for lib/env_backup.py runtime configuration parser."""
 
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from lib.env_backup import (
+    BACKUP_DIR_BASENAME,
     DEFAULT_BACKUP_CONFIG,
     BackupConfig,
+    default_backup_dir,
     parse_backup_config,
 )
 
 
 @pytest.mark.unit
+def test_default_backup_dir_uses_resolved_home() -> None:
+    with patch.object(Path, "home", return_value=Path("/home/testuser")):
+        assert default_backup_dir() == f"/home/testuser/{BACKUP_DIR_BASENAME}"
+
+
+@pytest.mark.unit
 def test_parses_default_config() -> None:
     config = parse_backup_config(DEFAULT_BACKUP_CONFIG)
-    assert config == BackupConfig(enabled=True, target="all", interval_minutes=720, snapshots=5)
+    assert config == BackupConfig(enabled=False, target="all", interval_minutes=720, snapshots=5)
 
 
 @pytest.mark.unit
@@ -35,7 +44,7 @@ def test_reads_from_environment_when_no_argument() -> None:
 @pytest.mark.unit
 @patch.dict("os.environ", {}, clear=True)
 def test_falls_back_to_default_when_env_missing() -> None:
-    assert parse_backup_config() == BackupConfig(True, "all", 720, 5)
+    assert parse_backup_config() == BackupConfig(False, "all", 720, 5)
 
 
 @pytest.mark.unit

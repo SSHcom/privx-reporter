@@ -120,7 +120,7 @@ The installer deploys:
 Generate the `.env` file:
 
 ```sh
-create_env --sync skip --ui skip
+create_env --skip sync ui
 ```
 
 You will be prompted for PrivX and database connection details and other configuration values.
@@ -173,9 +173,19 @@ Use [`release/reporter_ui/docker-compose-ui-mapped.yml`](../../../release/report
 docker compose -f docker-compose-ui-mapped.yml up -d
 ```
 
+### Set UI super-admin password
+
+On first install the UI bootstrap creates an `admin` user with a random password hash that is not stored anywhere. Before the first login, log in to the **UI host** (SSH or equivalent) and run:
+
+```sh
+docker exec -it reporter-ui /opt/reporter/bin/admin_passwd
+```
+
+The container name is `reporter-ui` when using the compose files linked above. Enter and confirm the new password when prompted (must meet the UI password policy).
+
 ### Accessing the UI
 
-Once the container is running, access the UI at `http://<host>:8501`. Log in with the admin password configured in the environment and change it immediately.
+Once the container is running and the admin password is set, open `http://<host>:8501` and sign in as `admin`.
 
 ## Running on a container orchestrator
 
