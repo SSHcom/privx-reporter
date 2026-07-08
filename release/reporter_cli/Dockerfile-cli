@@ -19,7 +19,9 @@ ENV UV_CACHE_DIR=/tmp/uv-cache
 RUN uv sync --frozen --no-dev --no-editable \
     && sh ./security.sh \
     && rm -rf /tmp/uv-cache \
-    && for d in lib reports administration ui sync_server; do cp -r "apps/python/$d" "$d"; done
+    && for d in lib reports administration ui sync_server create_env; do cp -r "apps/python/$d" "$d"; done \
+    && sed -i 's|"apps/python/|"|g' pyproject.toml \
+    && rm -rf apps/python
 
 FROM python:3.14-alpine
 
@@ -35,6 +37,7 @@ COPY release/reporter_cli/.env-example ./.env-example
 COPY release/reporter_cli/.env-example-distributed ./.env-example-distributed
 COPY apps/python/backup_server/ backup_server/
 COPY release/reporter_cli/docker-compose.yml ./
+COPY release/reporter_cli/docker-compose-env.yml ./
 COPY release/reporter_cli/Dockerfile-backup ./Dockerfile-backup
 COPY release/common/pg_ssl_entry_point.sh ./pg_ssl_entry_point.sh
 COPY release/common/bin/create_env release/common/bin/admin release/common/bin/report release/common/bin/post_install release/common/bin/backup /installer/bin/

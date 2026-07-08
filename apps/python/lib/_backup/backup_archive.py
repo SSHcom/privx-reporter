@@ -38,17 +38,13 @@ def _dry_run_backed_up_summary(
     members: list[tuple[Path, str]],
 ) -> str | None:
     """Summarize what a production archive would contain (dumps + install tree)."""
-    dump_arcnames = sorted(
-        arcname for _, arcname in members if arcname.startswith(".backup/")
-    )
+    dump_arcnames = sorted(arcname for _, arcname in members if arcname.startswith(".backup/"))
     if not dump_arcnames and backup_dir.is_dir():
         dump_arcnames = [f".backup/{path.name}" for path in sorted(backup_dir.glob("*.dump"))]
 
     if dump_arcnames:
         summary = ", ".join(dump_arcnames)
-        has_install_files = any(
-            not arcname.startswith(".backup/") for _, arcname in members
-        )
+        has_install_files = any(not arcname.startswith(".backup/") for _, arcname in members)
         if has_install_files:
             summary = f"{summary}, and other files from {INSTALLED_REPORTER_HOME}"
         return summary
@@ -66,8 +62,7 @@ def dry_run_messages(
 ) -> list[str]:
     """Lines to print when skipping archive creation in development mode."""
     lines = [
-        "Dry-run: Assuming backup command is running in development mode. "
-        "Skipping actual backup....",
+        "Dry-run: Assuming backup command is running in development mode. Skipping actual backup....",
     ]
     backed_up = _dry_run_backed_up_summary(backup_dir, members)
     if backed_up:

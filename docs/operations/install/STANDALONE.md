@@ -1,6 +1,6 @@
 # Standalone Installation
 
-In a standalone deployment, all components — Reporter CLI, Sync Server, UI and two PostgreSQL databases — run on a single host. A Docker Compose file manages the Sync Server, UI, and database containers, while the CLI runs directly on the host.
+In a standalone deployment, all components — Reporter CLI, Sync Server, UI and two PostgreSQL databases — run on a single host. Docker Compose manages the Sync Server, UI, and database containers, while the CLI runs directly on the host.
 
 ```text
 +------------------------------------------------------------+
@@ -42,7 +42,6 @@ The CLI can also be installed on macOS, but this is not a supported production c
   - [Python](https://www.python.org/) 3.13 or newer
   - [UV](https://docs.astral.sh/uv/)
   - [Git](https://git-scm.com/)
-
 - **Docker images** available in the local Docker registry or on Docker Hub:
 
   | Image                                    | Purpose       |
@@ -51,104 +50,185 @@ The CLI can also be installed on macOS, but this is not a supported production c
   | `privxsshcom/privx-reporter-sync:latest` | Sync Server   |
   | `privxsshcom/privx-reporter-ui:latest`   | UI            |
 
-No external database provisioning is needed — the standalone compose file includes local PostgreSQL containers.
 
-## Install
+No external database provisioning is needed — the standalone compose files include local PostgreSQL containers.
 
-1. Verify prerequisites:
+## Document contents
 
-```sh
-python3 -V
-uv -V
-docker compose version
-git --version
-```
+**Quick Start**
 
-2. Create the installation directory `/opt/reporter`:
-   - `sudo mkdir -p /opt/reporter`
-   - `sudo chown $(id -u):$(id -g) /opt/reporter`
+1. [Installation](#installation)
+2. [Configuration](#configuration)
+3. [Startup](#startup)
 
-3. Run the installer:
+**Reference**
 
-```sh
-# Use INSTALL_UID and INSTALL_GID to prevent installed files from being owned by root.
-docker run --rm \
-  -e INSTALL_UID=$(id -u) \
-  -e INSTALL_GID=$(id -g) \
-  -v /opt/reporter:/install \
-  privxsshcom/privx-reporter-cli:latest
-```
+- [Database migrations](#database-migrations)
+- [How to handle OIDC environment variables](#how-to-handle-oidc-environment-variables)
+- [Backups](#backups)
+  - [Database backup](#database-backup)
+  - [Create a portable backup archive](#create-a-portable-backup-archive)
+- [Alternative configurations](#alternative-configurations)
+  - [UI TLS certificate](#ui-tls-certificate)
+  - [Using external database(s)](#using-external-databases)
 
-4. Add the reporter binaries to your PATH:
+---
+
+## Installation
+
+### 1 ) Verify prerequisites:
 
 ```sh
-echo 'export REPORTER_HOME=/opt/reporter' >> ~/.bashrc
-echo 'export PATH="/opt/reporter/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
+ python3 -V
+ uv -V
+ docker compose version
+ git --version
 ```
 
-5. Run post-install validation:
+### 2 ) Create the installation directory `/opt/reporter`:
+  - `sudo mkdir -p /opt/reporter`
+  - `sudo chown $(id -u):$(id -g) /opt/reporter`
 
-```sh
-post_install --secure
-```
+### 3 ) Run the installer:
+  ```sh
+   # Use INSTALL_UID and INSTALL_GID to prevent installed files from being owned by root.
+   docker run --rm \
+     -e INSTALL_UID=$(id -u) \
+     -e INSTALL_GID=$(id -g) \
+     -v /opt/reporter:/install \
+     privxsshcom/privx-reporter-cli:latest
+  ```
 
-The installer deploys:
+After the installation, follow the on-screen instructions (also available in `/opt/reporter/post_install.txt`). This document covers the same instructions but with more details.
 
-- CLI tools (`bin/report`, `bin/admin`, `bin/create_env`, `bin/backup`, `bin/post_install`).
-- `docker-compose.yml` — defines the Sync Server, UI, and two local PostgreSQL containers (data with TimescaleDB, admin).
-- `Dockerfile-backup` — used by `docker-compose.yml` for running the database backup service.
+The installer deploys the following to `/opt/reporter`:
+
+- CLI tools to `bin/`: `**report, admin, backup, post_install, create_env**`
+- Docker and Compose files 
+  - `docker-compose.yml` — Sync Server, UI, and two local PostgreSQL containers when `ENV_SOURCE=db`.
+  - `docker-compose-env.yml` — same services when `ENV_SOURCE=env` (all settings read from `.env`).
+  - `Dockerfile-backup` — used by both compose files for the database backup service.
 - `.env-example` — template for all required environment variables.
-- `.info` — install metadata used by `post_install` (for example `install=standalone`).
+- `.info` — install metadata used by `post_install`
 - `.pg-ssl/` — self-signed TLS certificate and `pg_hba.conf` for the local database containers.
-- Various directories containing code used for commands and servers: `administration`, `backup_server`, `reports`, and `lib`.
+- Various directories containing code used for commands and servers
 
-## Configure
+### 4 ) Add the reporter binaries to your PATH:
+  ```sh
+   echo 'export REPORTER_HOME=/opt/reporter' >> ~/.bashrc
+   echo 'export PATH="/opt/reporter/bin:$PATH"' >> ~/.bashrc
+   source ~/.bashrc
+  ```
+### 5 ) Run post-install validations and updates:
+  ```sh
+   post_install --secure
+  ```
+   Using the `--secure` option will make the command update Python dependencies having potential security issues.
 
-Generate the `.env` file using the interactive configuration tool.
+## Configuration
+
+### 1 ) Generate the `.env` file
+
+Use the interactive configuration tool. We skip configuring the database as we want the default connection setup.
 
 ```sh
-create_env --db defaults --sync defaults --ui defaults
+create_env --skip db
 ```
 
-This populates `.env` with some defaults before prompting for other configuration values.
+You can also apply defaults for the UI and Sync Server: `create_env --skip db ui sync`).
 
-To customize Sync Server and UI behavior, omit `--sync defaults` and/or `--ui defaults`, or edit `.env` manually afterwards. Always use defaults for the database.
+If you decide to store configuration in the database (recommended), you can do modifications later in the UI configuration page.
 
-If you want to enable running backups of the databases (configured by `BACKUP_CONFIG`), refer to the _Backups -> Database backups_ section below.
+**Key prompts**
 
-Before starting Docker Compose, create the required host directories:
+**Note**: The following environment values are **always** written to `.env`, regardless of where other configuration is stored: `DB_*`, `ENV_SOURCE`, `REPORT_OUT_DIR`, and `BACKUP_DIR`.
+
+The table below shows the most important prompts for a standalone installation.
+
+| Prompt                      | Notes                                                                                                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Output `.env` path**      | Use the default: `/opt/reporter/.env`                                                                                                |
+| **Configuration source**    | `database` (recommended) or `.env file` — sets `ENV_SOURCE`                                                                          |
+| **Standalone installation** | Answer **Yes** — this configures CLI, Sync Server, UI, and databases to be run on a single host                                      |
+| **Report output directory** | `REPORT_OUT_DIR` — Select where to store generated reports                                                                           |
+| **Backup directory**        | `BACKUP_DIR` — Select where backups are stored. See [Database backup](#database-backup)                                              |
+| **Other prompts**           | If you picked `.env` as the configuration source, you will be prompted for details about the PrivX connection, Sync Server, UI, etc. |
+
+### 2 ) Create required host directories
 
 ```sh
 mkdir -p /opt/reporter/.volumes/data-db /opt/reporter/.volumes/admin-db
-mkdir -p <REPORT_OUT_DIR>   # use the value of REPORT_OUT_DIR from .env
-mkdir -p <BACKUP_DIR>   # use the value of BACKUP_DIR from .env
+mkdir -p <REPORT_OUT_DIR>   # value from .env
+mkdir -p <BACKUP_DIR>       # value from .env (standalone installs)
 ```
 
-## Start
+## Startup
 
-From the installation directory:
+### 1 ) Start Docker containers
+
+Change directory to `/opt/reporter` 
+
+Determine the correct `docker compose` command:
+
+| `/opt/reporter/.env -> ENV_SOURCE` | File                     | Start command                                    |
+| ---------------------------------- | ------------------------ | ------------------------------------------------ |
+| `db`                               | `docker-compose.yml`     | `docker compose up -d`                           |
+| `env`                              | `docker-compose-env.yml` | `docker compose -f docker-compose-env.yml up -d` |
+
+
+### 2 ) Verify that containers are running
+
+Running `docker ps` should show something like this:
+
+```
+CONTAINER ID   IMAGE   COMMAND       CREATED          STATUS                   PORTS      NAMES
+270e95ea49ba   aed…    "reporter…"   15 seconds ago   Up 15 seconds            0.0.0.0…   reporter-ui
+409affbb5677   7ce…    "reporter…"   15 seconds ago   Up 15 seconds                       reporter-sync
+71fe7281bb08   rep…    "python3…"    15 seconds ago   Up 15 seconds            5432/tc…   reporter-backup
+9cb47664374f   tim…    "/bin/sh…     15 seconds ago   Up 15 seconds (healthy)  0.0.0.0…   reporter-data-db
+e89aa6bc109c   pos…    "/bin/sh…"    15 seconds ago   Up 15 seconds (healthy)  0.0.0.0…   reporter-admin-db
+```
+
+### 3 ) Set UI super-admin password
+
+On first install the UI bootstrap creates a super `admin` user with a random password hash that is not stored anywhere. Set a known password before the first login:
 
 ```sh
-cd /opt/reporter
-docker compose up -d
+docker exec -it reporter-ui /opt/reporter/bin/admin_passwd
 ```
 
-This starts:
+Enter and confirm the new password when prompted.
 
-- Two PostgreSQL containers (`reporter-data-db`, `reporter-admin-db`) with health checks.
-- The Sync Server (`reporter-sync`), which waits for both databases to become healthy.
-- The UI (`reporter-ui`), accessible on port `8501`.
-- The backup service (`reporter-backup`), which dumps the database(s) to `/opt/reporter/.backup/` on the schedule set by `BACKUP_CONFIG`.
+This is not necessary on subsequent installs provided the admin database is intact
 
-`docker ps` should show the following running containers:
-- `privxsshcom/privx-reporter-ui:latest`
-- `privxsshcom/privx-reporter-sync:latest`
-- `reporter-backup` (built locally from `Dockerfile-backup`)
-- `timescale/timescaledb:latest-pg18`
-- `postgres:18`
+### 4 ) Access the UI
 
-Access the UI at `https://<host>:8501`. Log in with the admin password set in `.env` and change it immediately.
+Open `https://<host>:8501` and sign in as `admin` with the password you just set.
+
+### 5 ) App Configuration
+
+Changing the configuration differs depending on the storage medium:
+
+| `/opt/reporter/.env -> ENV_SOURCE` | Where to make the changes                                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `db`                               | Log in as super _admin_ and apply changes on the _App Configuration_ page.                                          |
+| `env`                              | Modify the `/opt/reporter/.env` file followed by: `docker compose -f docker-compose-env.yml up -d --force-recreate` |
+
+### 6 ) Post installation notes
+
+If the configuration medium is the database, go through the following in the App Configuration page:
+  - Configure the Sync Server to make it start collecting PrivX records
+  - Configure OIDC providers (if used)
+
+If the configuration medium is the `.env` file:
+  - ALWAYS add `-f docker-compose-env.yml` as extra argument if you need to run `docker compose` 
+
+**IMPORTANT**:
+
+- Never change database connection environment variables (`DB_DATA_*`, `DB_ADMIN_*`) in `.env` unless you are intentionally switching to external databases. In standalone deployments these values are expected to point to the local compose services (`reporter-data-db`, `reporter-admin-db`) and their initialized data volumes.
+ 
+- When enabling backup, take number of records being inserted to the data database into account. If the number is very high (in the millions), consider using a different backup solution.
+
 
 ## Database migrations
 
@@ -158,90 +238,40 @@ Migrations are applied automatically when the Sync Server or UI starts for the f
 admin migration up
 ```
 
-### Apply environment variable changes
+## How to handle OIDC environment variables
 
-After editing `.env`, recreate the containers so the new values are loaded:
+The `create_env` script does not create OIDC-related variables.
 
-```sh
-cd /opt/reporter
-docker compose up -d --force-recreate
-```
+**If `ENV_SOURCE=db`**:
+- Configure OIDC provider settings in **App Configuration**.
 
-You can also run `docker compose down` and then `docker compose up -d`, but that is typically unnecessary for environment changes.
+**If `ENV_SOURCE=env`**
+- Set `OIDC_1_ENABLED=true` / `OIDC_2_ENABLED=true` in `.env`
+- Add OIDC provider variables to the file
+- Uncomment required OIDC entries in `docker-compose-env.yml` under `reporter-ui -> environment`:
+  - Enable flags (`OIDC_1_ENABLED`, `OIDC_2_ENABLED`)
+  - Active provider slot variables (`OIDC_1_*` and/or `OIDC_2_*`)
+  - Optional global OIDC variables (`OIDC_AUTO_PROVISION*`, `OIDC_GROUP_*`) only when used
+  - Keep unused provider slot variables commented (for example keep `OIDC_2_*` commented when only provider 1 is used)
 
-Do not change database connection environment variables (`DB_DATA_*`, `DB_ADMIN_*`) unless you are intentionally switching to external databases. In standalone deployments these values are expected to point to the local compose services (`reporter-data-db`, `reporter-admin-db`) and their initialized data volumes. Changing them can cause sync/ui startup failures or authentication/connection mismatches.
-
-### How to handle OIDC  environment variables
-
-
-Since the `create_env` script does not create OIDC related variables, you must manually add them to the `.env` file:
-
-- You can copy from the example below and modify as needed.
-- Replace `ENTRA_` with the OIDC provider you want to use (multiple providers are supported)
-- Remember to modify `UI_AUTH_MODE` accordingly
-
-- OIDC example configuration:
-  ```
-  # OIDC providers (uncomment and adjust when UI_AUTH_MODE includes these provider ids)
-  #
-  # IMPORTANT: Also uncomment the corresponding variables in the docker-compose.yml file.
-  ##
-  # Entra ID (public cloud)
-  # ENTRA_OIDC_ISSUER=https://login.microsoftonline.com/<tenant-id>/v2.0
-  # ENTRA_OIDC_CLIENT_ID=<app-client-id>
-  # ENTRA_OIDC_CLIENT_SECRET=<client-secret>
-  # ENTRA_OIDC_REDIRECT_URI=http://localhost:8501/0_Login
-  # ENTRA_OIDC_POST_LOGOUT_REDIRECT_URI=http://localhost:8501/
-  # ENTRA_OIDC_SCOPES="openid profile email offline_access"
-  # ENTRA_OIDC_PROMPT=select_account
-  # ENTRA_OIDC_STATE_SECRET=<long-random-secret>
-  #
-  # Optional: OIDC auto-provisioning (creates Reporter local users on first successful IdP login)
-  # OIDC_AUTO_PROVISION=false
-  # OIDC_AUTO_PROVISION_DEFAULT_ROLE=viewer
-  # OIDC_AUTO_PROVISION_REQUIRE_EMAIL=false
-  # OIDC_AUTO_PROVISION_ALLOWED_EMAIL_DOMAINS=example.com,example.org
-  #
-  # Optional: map IdP group/role claims to Reporter user groups.
-  # Claim path can be simple (groups) or dotted (realm_access.roles).
-  # Mapping applies to auto-provisioned users. Existing local users are not altered.
-  # OIDC_GROUP_CLAIM=groups
-  # OIDC_GROUP_MAPPING='{"idp-admin":"admin","idp-viewer":"viewer","idp-viewer2":"viewer"}'
-  ```
-- You must also expose the variables in `/opt/reporter/docker-compose.yml`.
-- For an _Entra_ configuration add the following to `reporter-ui -> environment`:
-   ```
-  ENTRA_OIDC_ISSUER: ${ENTRA_OIDC_ISSUER}
-  ENTRA_OIDC_CLIENT_ID: ${ENTRA_OIDC_CLIENT_ID}
-  ENTRA_OIDC_CLIENT_SECRET: ${ENTRA_OIDC_CLIENT_SECRET}
-  ENTRA_OIDC_REDIRECT_URI: ${ENTRA_OIDC_REDIRECT_URI}
-  ENTRA_OIDC_POST_LOGOUT_REDIRECT_URI: ${ENTRA_OIDC_POST_LOGOUT_REDIRECT_URI}
-  ENTRA_OIDC_SCOPES: ${ENTRA_OIDC_SCOPES}
-  ENTRA_OIDC_PROMPT: ${ENTRA_OIDC_PROMPT}
-  ENTRA_OIDC_STATE_SECRET: ${ENTRA_OIDC_STATE_SECRET}
-  ```
-- For other providers replace `ENTRA_` with actual provider.
-
-- If you want to use auto provisioning of users, also add:
-  ```
-  OIDC_AUTO_PROVISION: ${OIDC_AUTO_PROVISION}
-  OIDC_AUTO_PROVISION_DEFAULT_ROLE: ${OIDC_AUTO_PROVISION_DEFAULT_ROLE}
-  OIDC_AUTO_PROVISION_REQUIRE_EMAIL: ${OIDC_AUTO_PROVISION_REQUIRE_EMAIL}
-  OIDC_AUTO_PROVISION_ALLOWED_EMAIL_DOMAINS:${OIDC_AUTO_PROVISION_ALLOWED_EMAIL_DOMAINS}
-  OIDC_GROUP_CLAIM: ${OIDC_GROUP_CLAIM}
-  OIDC_GROUP_MAPPING: ${OIDC_GROUP_MAPPING}
-  ```
-
-Reference [OIDC Auth guide](../OIDC_UI_AUTH_GUIDE.md) for more OIDC details.
-
+Referencs:
+- [OIDC Auth guide](../OIDC_UI_AUTH_GUIDE.md) for more OIDC details.
+- [Environment variables](../ENVIRONMENT_VARIABLES.md)
 
 ## Backups
 
 ### Database backup
 
 The `reporter-backup` service (run as a Docker container) periodically dumps the database tables according to:
+
 - `BACKUP_DIR` - dump file location
 - `BACKUP_CONFIG` - backup configuration
+
+`BACKUP_DIR` is environment-based in both modes. `BACKUP_CONFIG` source depends on `ENV_SOURCE`:
+- `ENV_SOURCE=env`: configure both `BACKUP_DIR` and `BACKUP_CONFIG` in `.env`.
+- `ENV_SOURCE=db`: configure `BACKUP_DIR` in `.env` and `BACKUP_CONFIG` in App Config.
+
+When `ENV_SOURCE=db`, backup is disabled until `BACKUP_CONFIG` is enabled in App Config. The running backup service checks for enablement every 5 minutes, so it starts automatically within up to 5 minutes after enabling.
 
 Example:
 
@@ -250,47 +280,74 @@ BACKUP_DIR=/home/<privx-user>/db-backups
 BACKUP_CONFIG=<enabled>,<target>,<interval-minutes>,<snapshots>
 ```
 
-| Field              | Values                     | Default | Notes                                    |
-| ------------------ | -------------------------- | ------- | ---------------------------------------- |
-| `enabled`          | `true` \| `false`          | `true`  | Set `false` to disable scheduled dumps.  |
-| `target`           | `admin` \| `data` \| `all` | `all`   | Which database(s) to dump.               |
-| `interval-minutes` | number (min 60)            | `720`   | Dump frequency; `1440` = every 24 h.     |
-| `snapshots`        | number (min 1)             | `5`     | Dumps kept per database (oldest pruned). |
+| Field              | Values               | Default | Notes                                    |
+| ------------------ | -------------------- | ------- | ---------------------------------------- |
+| `enabled`          | `true`, `false`      | `false` |                                          |
+| `target`           | `admin`,`data`,`all` | `all`   | Which databases to dump                  |
+| `interval-minutes` | number (min 60)      | `720`   | Dump frequency; `1440` = every 24 h.     |
+| `snapshots`        | number (min 1)       | `5`     | Dumps kept per database (oldest pruned). |
+
 
 Dumps are written as `<target>-<UTC-timestamp>.dump` using `pg_dump -Fc` and are restorable with `pg_restore`.
 
-**Note**: The latest database dump can be archived together with other important files. See the _Create a portable backup archive_ section for details.
+**Note**: The latest database dump can be archived together with other important files. See the *Create a portable backup archive* section for details.
 
-#### Restoring the databases
+**Restoring the databases**
 
 The  typical steps would be
 
 - Make a clean reporter installation
-  - Do not run `docker compose up -d` immediately. The restore will fail if you do.
+  - Do not run the full stack immediately. The restore will fail if you do.
 - Create the `.env` file
-- Start the PostgreSQL databases
-  -  `docker compose up reporter-admin-db -d`
-  -  `docker compose up reporter-data-db -d`
+- Start the PostgreSQL databases (use the [compose file](#compose-file) for your `ENV_SOURCE`):
+  ```sh
+  cd /opt/reporter
+
+  # If ENV_SOURCE=db
+  docker compose up reporter-admin-db reporter-data-db -d
+
+  # If ENV_SOURCE=env
+  docker compose -f docker-compose-env.yml up reporter-admin-db reporter-data-db -d
+  ```
 - Restore tables
   - `pg_restore -h localhost -p <port> -U <user> -d report_admin <backup-dir>/admin-<timestamp>.dump`
   - `pg_restore -h localhost -p <port> -U <user> -d report_data <backup-dir>/admin-<timestamp>.dump`
-- Now you can run the rest of the Docker containers
-  - `docker compose up -d`
+- Start the remaining containers:
+  ```sh
+  # If ENV_SOURCE=db (default)
+  docker compose up -d
 
+  # If ENV_SOURCE=env
+  docker compose -f docker-compose-env.yml up -d
+  ```
 
 ### Create a portable backup archive
 
-The `backup` command bundles the **latest** database dump(s) from the configured backup directory (`BACKUP_DIR` or default `/opt/reporter/.backup/`) together with the restore-critical configuration (`.env`, `docker-compose.yml`, `.pg-ssl/`, etc) into a single `tar.gz` archive.
+The `backup` command bundles the **latest** database dump(s) from `BACKUP_DIR` together with restore-critical configuration (`.env`, `docker-compose.yml`, `.pg-ssl/`, etc.) into a single `tar.gz` archive. If you use `ENV_SOURCE=env`, keep a copy of `docker-compose-env.yml` separately — the archive does not include it.
 
 > **Precondition:** all Reporter containers must be stopped. The script refuses to run while any of `reporter-ui`, `reporter-sync`, `reporter-data-db`, `reporter-admin-db`, or `reporter-backup` is up.
 
 ```sh
 cd /opt/reporter
+
+# ENV_SOURCE=db (default)
 docker compose down
+
+# ENV_SOURCE=env
+docker compose -f docker-compose-env.yml down
+
 backup /path/to/destination
 ```
 
-This writes `/path/to/destination/reporter-backup-<UTC-timestamp>.tar.gz`. Restart the deployment afterwards with `docker compose up -d`.
+This writes `/path/to/destination/reporter-backup-<UTC-timestamp>.tar.gz`. Restart with the matching [compose file](#compose-file):
+
+```sh
+# ENV_SOURCE=db (default)
+docker compose up -d
+
+# ENV_SOURCE=env
+docker compose -f docker-compose-env.yml up -d
+```
 
 See the previous section on how to restore the databases using `pg_restore`.
 
@@ -302,7 +359,7 @@ The `reporter-ui` container starts with HTTPS enabled by default, using a self-s
 
 `/opt/reporter/certs/` is a path inside the `reporter-ui` container image.
 
-To replace the UI certificate, place certificate files in a host directory (for example `/opt/reporter/ui-certs`) and mount that host directory to `/opt/reporter/certs/` in the `reporter-ui` service (`/opt/reporter/docker-compose.yml`):
+To replace the UI certificate, place certificate files in a host directory (for example `/opt/reporter/ui-certs`) and mount that host directory to `/opt/reporter/certs/` in the `reporter-ui` service of your [compose file](#compose-file) (`docker-compose.yml` or `docker-compose-env.yml`):
 
 - `fullchain.pem`
 - `privatekey.pem`
@@ -323,15 +380,12 @@ If you remove `SSL_CERT` and `SSL_KEY` from the `reporter-ui` service, the UI st
 
 ### Using external database(s)
 
-If you want to manage the data and/or admin database(s) elsewhere (e.g. a managed PostgreSQL service), adjust the setup as follows:
+If you want to have the data and/or admin databases elsewhere (e.g. a managed PostgreSQL service):
 
-1. Run `create_env` without `--db defaults` so you can provide your own DB connection details:
-
-```sh
-create_env --sync defaults --ui defaults
-```
-
-2. Skip creating the local DB volume directories (`/opt/reporter/.volumes/data-db`, `/opt/reporter/.volumes/admin-db`).
-
-3. Remove the database service sections from `docker-compose.yml` before starting (the `reporter-data-db` and `reporter-admin-db` services and their volume definitions). Also remove any `depends_on` references to those services.
+- run `create_env` without `--skip db` to provide your own DB connection details
+- Skip creating the local DB volume directories (`/opt/reporter/.volumes/data-db`, `/opt/reporter/.volumes/admin-db`).
+- Remove the database service sections from your [compose file](#compose-file) before starting:
+  - Remove the `reporter-data-db` service
+  - Remove the `reporter-admin-db` services 
+  - Also remove any `depends_on` references to those services.
 

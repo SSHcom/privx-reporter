@@ -1,6 +1,6 @@
 [project]
 name = "reporter-privx-dev"
-version = "1.1.1"
+version = "1.2.0"
 description = "PrivX reporting service with PostgreSQL (TimescaleDB) sync"
 requires-python = ">=3.13"
 dependencies = [
@@ -26,7 +26,7 @@ dependencies = [
 allow-direct-references = true
 
 [project.scripts]
-create-env = "lib.interactive.env._create_env:main"
+create-env = "create_env._create_env:main"
 sync-server = "sync_server.main:main"
 sync-server-live-test = "live_test.main:main"
 backup-server = "backup_server.main:main"
@@ -43,11 +43,15 @@ dev-mode-dirs = ["apps/python", "."]
 
 [tool.hatch.build.targets.wheel.force-include]
 "apps/python/lib" = "lib"
+"apps/python/create_env" = "create_env"
 "apps/python/sync_server" = "sync_server"
 "apps/python/backup_server" = "backup_server"
 "apps/python/reports" = "reports"
 "apps/python/administration" = "administration"
 # live_test is imported from the repo root via dev-mode-dirs / _reporter_privx_dev.pth (not vendored here).
+
+[tool.hatch.build.targets.editable]
+mode = "redirect"
 
 [dependency-groups]
 dev = [

@@ -9,22 +9,46 @@ Tests are not necessary for this module.
 """
 
 import os
+from pathlib import Path
+
+from lib.service.env_source import getEnv
+
+REPORT_OUT_DIR = "REPORT_OUT_DIR"
+REPORT_OUT_DIR_BASENAME = "REPORTS"
+
+
+def default_report_out_dir() -> str:
+    """Return the default report output directory under the current user's home directory."""
+    return str(Path.home() / REPORT_OUT_DIR_BASENAME)
 
 
 class EnvConfig:
     """Misc configuration"""
 
     @staticmethod
+    def get_env_source() -> str:
+        """Resolve configuration source selector ('env' or 'db')."""
+        source = os.getenv("ENV_SOURCE", "env").strip().lower()
+        if source not in {"env", "db"}:
+            return "env"
+        return source
+
+    @staticmethod
     def get_api_batchsize() -> int:
         """Get API batch size from environment variable."""
-        return int(os.getenv("REPORT_API_BATCH_SIZE", "100"))
+        return int(getEnv("REPORT_API_BATCH_SIZE", "100"))
 
     @staticmethod
     def get_report_out_dir() -> str:
-        """Get report output directory path from environment variable."""
-        return os.getenv("REPORT_OUT_DIR", "report_out")
+        """Get report output directory path from environment variable (always from env, never DB)."""
+        return os.getenv(REPORT_OUT_DIR) or default_report_out_dir()
 
-    """Database configuration"""
+    """Database configuration.
+
+    DB_* variables are always read from the process environment (os.getenv),
+    even when ENV_SOURCE=db, so the admin database can be reached to load
+    app config from the database.
+    """
 
     @staticmethod
     def get_db_config() -> dict[str, dict[str, str | int | bool]]:
@@ -74,51 +98,34 @@ class EnvConfig:
     @staticmethod
     def get_privx_api_oauth_client_id() -> str:
         """Get PrivX API OAuth client ID from environment variable."""
-        return os.getenv("PRIVX_API_OAUTH_CLIENT_ID", "")
+        return getEnv("PRIVX_API_OAUTH_CLIENT_ID", "")
 
     @staticmethod
     def get_privx_api_oauth_client_secret() -> str:
         """Get PrivX API OAuth client secret from environment variable."""
-        return os.getenv("PRIVX_API_OAUTH_CLIENT_SECRET", "")
+        return getEnv("PRIVX_API_OAUTH_CLIENT_SECRET", "")
 
     @staticmethod
     def get_privx_api_client_id() -> str:
         """Get PrivX API client ID from environment variable."""
-        return os.getenv("PRIVX_API_CLIENT_ID", "")
+        return getEnv("PRIVX_API_CLIENT_ID", "")
 
     @staticmethod
     def get_privx_api_client_secret() -> str:
         """Get PrivX API client secret from environment variable."""
-        return os.getenv("PRIVX_API_CLIENT_SECRET", "")
+        return getEnv("PRIVX_API_CLIENT_SECRET", "")
 
     @staticmethod
     def get_privx_ca_cert() -> str:
         """Get path to PrivX CA certificate from environment variable."""
-        return os.getenv("PRIVX_CA_CERT", "")
+        return getEnv("PRIVX_CA_CERT", "")
 
     @staticmethod
     def get_privx_hostname() -> str:
         """Get PrivX hostname from environment variable."""
-        return os.getenv("PRIVX_HOSTNAME", "localhost")
+        return getEnv("PRIVX_HOSTNAME", "localhost")
 
     @staticmethod
     def get_privx_port() -> int:
         """Get PrivX port from environment variable."""
-        return int(os.getenv("PRIVX_PORT", "443"))
-
-    """UI authentication configuration"""
-
-    @staticmethod
-    def get_ui_oidc_enabled() -> bool:
-        """Enable optional OIDC login flow for Streamlit UI authentication."""
-        return os.getenv("UI_OIDC_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
-
-    @staticmethod
-    def get_ui_oidc_provider() -> str:
-        """Get optional provider identifier used by Streamlit ``st.login``."""
-        return os.getenv("UI_OIDC_PROVIDER", "").strip()
-
-    @staticmethod
-    def get_ui_oidc_username_claim() -> str:
-        """Get OIDC claim name that maps to local ``user.name`` values."""
-        return os.getenv("UI_OIDC_USERNAME_CLAIM", "email").strip() or "email"
+        return int(getEnv("PRIVX_PORT", "443"))

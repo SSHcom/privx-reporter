@@ -5,48 +5,15 @@ This module only maps to existing local groups; it never creates new group rows.
 
 from __future__ import annotations
 
-import json
-import os
-
 from sqlalchemy import func, select
 from streamlit.logger import get_logger
 
+from lib import env_oidc
 from lib.clients.postgresql import use_database
 from lib.database.models.admin.user_group import UserGroupTable
 
 
 log = get_logger(__name__)
-
-
-def group_claim_name() -> str:
-    """Return configured claim path containing IdP groups/roles."""
-    raw = os.getenv("OIDC_GROUP_CLAIM")
-    if raw is None:
-        raw = os.getenv("IDC_GROUP_CLAIM", "groups")
-    claim_name = str(raw or "groups").strip()
-    return claim_name or "groups"
-
-
-def group_mapping() -> dict[str, str]:
-    """Parse `OIDC_GROUP_MAPPING` JSON object (`idp_group -> local_group_ref`)."""
-    raw = os.getenv("OIDC_GROUP_MAPPING", "").strip()
-    if not raw:
-        return {}
-    try:
-        parsed = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        log.warning("OIDC_GROUP_MAPPING is not valid JSON: %s", exc)
-        return {}
-    if not isinstance(parsed, dict):
-        log.warning("OIDC_GROUP_MAPPING must be a JSON object, got %s", type(parsed).__name__)
-        return {}
-    mapping: dict[str, str] = {}
-    for key, value in parsed.items():
-        source = str(key).strip()
-        target = str(value).strip()
-        if source and target:
-            mapping[source] = target
-    return mapping
 
 
 def claim_values(claims: dict, claim_path: str) -> list[str]:
@@ -90,8 +57,8 @@ def resolve_group_by_ref(group_ref: str) -> tuple[int, str] | None:
 
 def resolve_mapped_user_group(provider_name: str, claims: dict) -> tuple[int, str] | None:
     """Find first mapped local group for claim values from current login."""
-    claim_name = group_claim_name()
-    mapping = group_mapping()
+    claim_name = env_oidc.group_claim_name()
+    mapping = env_oidc.group_mapping()
     values = claim_values(claims, claim_name)
     log.info(
         "OIDC claim path evaluation provider=%s claim_path=%s resolved_values=%s",
@@ -138,7 +105,7 @@ def resolve_mapped_user_group(provider_name: str, claims: dict) -> tuple[int, st
 
 def resolve_default_user_group() -> tuple[int, str]:
     """Resolve fallback group for auto-provisioned users."""
-    role_ref = os.getenv("OIDC_AUTO_PROVISION_DEFAULT_ROLE", "viewer").strip() or "viewer"
+    role_ref = env_oidc.auto_provision_default_role()
     role_ref_lower = role_ref.lower()
     candidate_names: list[str] = [role_ref]
     if role_ref_lower in {"reporter_viewer", "viewer", "users"}:

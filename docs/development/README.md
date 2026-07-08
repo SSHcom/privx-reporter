@@ -17,7 +17,7 @@ For focused implementation guides, start with `[DEVELOPMENT_GUIDE.md](DEVELOPMEN
 
 ## Project Structure
 
-Python application code lives under `apps/python/`. Root `bin/*` are thin forwarders to component `run` scripts (see [Command entrypoints and bin contract](#command-entrypoints-and-bin-contract)). `uv` editable installs add `apps/python/` to the import path (`pyproject.toml` `dev-mode-dirs`); production images flatten the same packages to `/opt/reporter/lib/`, `reports/`, etc.
+Python application code lives under `apps/python/`. Root `bin/*` are thin forwarders to component `run` scripts (see [Command entrypoints and bin contract](#command-entrypoints-and-bin-contract)). Local runs use `uv` and `.venv`; production images flatten the same packages to `/opt/reporter/lib/`, `reports/`, etc. If checkout changes are not reflected at runtime, see [Stale `.venv` copies](#stale-venv-copies-changes-not-picked-up).
 
 ```
  ├── apps/python/
@@ -27,15 +27,15 @@ Python application code lives under `apps/python/`. Root `bin/*` are thin forwar
  │   │   ├── utils/               # Various utils/helpers
  │   │   ├── _report/             # Reporter CLI entry point and routing
  │   │   ├── _admin/              # Administration CLI entry point and routing
- │   │   ├── _backup/             # Backup CLI (+ run)
- │   │   └── interactive/env/     # create-env helper (+ run)
- │   ├── reports/                 # Report implementations (+ run)
- │   │   └── config.toml          # Combined CLI configuration (generated)
- │   ├── administration/          # Administration modules (+ run)
- │   │   └── config.toml          # Combined CLI configuration (generated)
- │   ├── sync_server/             # Sync server (+ run)
- │   ├── backup_server/           # Backup daemon
- │   └── ui/                      # Streamlit UI (+ run)
+│   │   ├── _backup/             # Backup CLI (+ run)
+│   ├── create_env/              # create-env helper (+ run)
+│   ├── reports/                 # Report implementations (+ run)
+│   │   └── config.toml          # Combined CLI configuration (generated)
+│   ├── administration/          # Administration modules (+ run)
+│   │   └── config.toml          # Combined CLI configuration (generated)
+│   ├── sync_server/             # Sync server (+ run)
+│   ├── backup_server/           # Backup daemon
+│   └── ui/                      # Streamlit UI (+ run)
  │
  ├── bin/                         # Stable dev/CI wrappers (forwarders only)
  ├── tests/python/                # Mirrors apps/python layout (lib, reports, ui, …)
@@ -52,6 +52,7 @@ Future Go components live under `apps/go/`; production keeps flat Python at `/op
 Before starting development tasks, review [Essential Developer Notices](#essential-developer-notices). The following sections cover the most common pitfalls that cause confusing breakages:
 
 - [Combined configuration files](#combined-configuration-files) - regenerate combined configs after changing report/administration TOML metadata.
+- [Stale `.venv` copies](#stale-venv-copies-changes-not-picked-up) - code or data changes in `apps/python/` not reflected when you run CLI/UI commands.
 - [Database SSL](#database-ssl) - required certificate setup when SSL modes are enabled.
 
 ## Taskfile
@@ -156,7 +157,7 @@ This document intentionally stays descriptive and focuses on conventions and str
 | Backup server | `bin/serve_backup` | `apps/python/backup_server/run` |
 | Sync server | `bin/serve_sync` | `apps/python/sync_server/run` |
 | UI server | `bin/serve_ui` | `apps/python/ui/run` |
-| Create `.env` | `bin/create_env` | `apps/python/lib/interactive/env/run` |
+| Create `.env` | `bin/create_env` | `apps/python/create_env/run` |
 
 **Bin contract rules:**
 
@@ -191,6 +192,27 @@ Generated outputs:
 - `apps/python/administration/config.toml`
 
 Without regeneration, command metadata changes are not applied and related CLI/UI behavior can break.
+
+### Stale `.venv` copies (changes not picked up)
+
+**Symptom:** you changed files under `apps/python/`, but runtime behavior is unchanged — `ModuleNotFoundError`, old logic still running, or data files (migrations, CSVs) still showing old content. Deleting `.venv` and re-running `uv sync` doesn't help.
+
+**Root cause:** `uv sync` snapshots `lib/`, `reports/`, `administration/`, `sync_server/`, and `backup_server/` into `.venv/lib/python*/site-packages/`. The installed copies shadow your working tree — this applies to all `bin/*` wrappers including `bin/serve_ui`. Only `ui/` is not snapshotted and is always live. Non-Python files (migrations, CSVs) in those trees are also read from the snapshot.
+
+**Fix:**
+
+```bash
+uv sync --reinstall
+```
+
+| Change | Typical symptom |
+| --- | --- |
+| Any edit to `lib/` (e.g. `lib/env.py`, `lib/env_sync.py`) | Old behavior persists at runtime |
+| New package under `lib/` (e.g. `lib/service/`) | `ModuleNotFoundError` |
+| New/edited file in `administration/migration/_files/` | `bin/admin migration status` shows no pending migration |
+| `administration/events_enabled.csv` | `bin/admin event` uses old event codes |
+
+For combined CLI configs (`reports/config.toml`, `administration/config.toml`): [regenerate combined configs](#combined-configuration-files) instead.
 
 ### Administration metadata consistency
 

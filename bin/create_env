@@ -1,9 +1,9 @@
 #!/bin/bash
-# Stable dev entrypoint. Implementation: apps/python/lib/interactive/env/run.
+# Stable dev entrypoint. Implementation: apps/python/create_env/run.
 
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(realpath "$script_dir/..")"
 
-exec "$repo_root/apps/python/lib/interactive/env/run" "$@"
+exec "$repo_root/apps/python/create_env/run" "$@"

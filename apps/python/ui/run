@@ -13,6 +13,8 @@ if [[ ! -f "$repo_root/pyproject.toml" ]]; then
   exit 1
 fi
 
+export PYTHONPATH="$repo_root/apps/python${PYTHONPATH:+:$PYTHONPATH}"
+
 uv run dotenv -f "$repo_root/.env" run -- python -c "from ui.bootstrap import main; main()"
 cd "$script_dir"
 uv run dotenv -f "$repo_root/.env" run -- streamlit run app.py --browser.gatherUsageStats false "$@"

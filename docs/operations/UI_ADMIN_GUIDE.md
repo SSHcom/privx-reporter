@@ -14,21 +14,19 @@ For implementation structure and report execution flow, see [UI high-level archi
 
 ### First Login on a Fresh Admin Database
 
-When the admin database is new, the UI bootstraps an `admin` account automatically at startup.
+When the admin database is new, the UI bootstraps an `admin` account automatically at startup. The password hash is random and is not stored anywhere, so login is not possible until you set a password.
 
-- Username: `admin`
-- Initial password: `UI_TMP_ADMIN_PASSWORD`
+Set the initial password for the `admin` user before first login:
+- **Local development** (UI and admin database running, `.env` database settings correct): `bin/admin_passwd`
+- **Installed UI container**: `docker exec -it reporter-ui /opt/reporter/bin/admin_passwd`
 
-Operational requirement:
-
-- Change the `admin` account password immediately after first successful login.
-- Treat `UI_TMP_ADMIN_PASSWORD` as bootstrap-only; do not keep it as a long-lived credential.
+Also see [Quick Start](../development/QUICK_START.md) and the [standalone](install/STANDALONE.md) / [distributed](install/DISTRIBUTED.md) install guides.
 
 ### Login Behavior
 
 - Login requires both username and password.
 - Unknown username and wrong password both return the same error (`Invalid username or password`).
-- Authentication supports local username/password and optional OIDC providers based on `UI_AUTH_MODE`.
+- Authentication supports local username/password and optional OIDC providers (enabled via `OIDC_1_ENABLED` / `OIDC_2_ENABLED`).
 - If already authenticated, opening the login route redirects to Home.
 
 For OIDC-based UI login setup and troubleshooting, see [OIDC UI Authentication Operational Guide](OIDC_UI_AUTH_GUIDE.md).
@@ -46,7 +44,8 @@ For OIDC-based UI login setup and troubleshooting, see [OIDC UI Authentication O
 Operational notes:
 
 - If users are unexpectedly redirected to login, verify session-related environment variables first.
-- If environment values are changed, restart the UI service.
+- For `ENV_SOURCE=env`, restart/recreate the UI service after changing `.env`.
+- For `ENV_SOURCE=db`, apply changes in **Admin -> App Config** (app settings are DB-backed).
 
 ### Cookie Mismatch Warnings (Operational Note)
 
@@ -119,6 +118,15 @@ The **Administration** section appears in the sidebar only for users in the admi
 - **Users**: create users and open user profiles for updates.
 - **User Groups**: control report access and access-group filters per group.
 - **Report Groups**: create alternate report view groupings for sidebar navigation.
+
+### App Configuration (superadmin)
+
+When `ENV_SOURCE=db`, app settings are managed in **Admin -> App Config** by the `admin` account (superadmin).
+
+- This includes OIDC provider settings (`OIDC_1_*`, `OIDC_2_*`, and related global OIDC options).
+- Session timing and other app-level settings are also managed there.
+- Backup schedule (`BACKUP_CONFIG`) is managed there when `ENV_SOURCE=db`.
+- Backup directory (`BACKUP_DIR`) remains environment-based in `.env`.
 
 ## User Administration
 

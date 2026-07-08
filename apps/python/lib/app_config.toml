@@ -1,0 +1,559 @@
+# Specification for Reporter settings stored in the admin database.
+#
+# Purpose:
+#   - Drive admin UI forms without hard-coding fields in Python.
+#   - Keys match legacy environment variable names (values are persisted in DB).
+#
+# Related admin DB table (values only — labels, types, and validators live in this TOML file):
+#
+#   app_config (
+#       setting_key VARCHAR NOT NULL,
+#       value TEXT NOT NULL DEFAULT '',
+#       updated TIMESTAMP NOT NULL DEFAULT now()
+#   );
+#
+#   - One row per configured variable (e.g. SYNC_BATCH_SIZE, OIDC_1_ISSUER).
+#   - All values are stored as text (same as environment variables today).
+#   - Missing row → fall back to process environment, then TOML `default` in this file.
+#
+# OIDC model:
+#   - Up to two IdP configurations: OIDC_1_* and OIDC_2_* (flat keys, no nesting).
+#   - Global OIDC behavior (auto-provision, group mapping) uses OIDC_* keys.
+#
+# Field metadata:
+#   - label, description: UI copy
+#   - type: storage/parse hint (string, integer, boolean, csv, tuple3, json, pem)
+#   - widget: UI control (text, number, checkbox, textarea, password, select)
+#   - default: example default when unset
+#   - validate: named validator implemented in Python (not evaluated from TOML)
+#   - sensitive: mask in UI and audit logs
+#   - optional: may be empty
+#   - order: display order within section (lower first)
+
+# ---------------------------------------------------------------------------
+# UI session and authentication mode
+# ---------------------------------------------------------------------------
+
+[sections.ui]
+title = "UI"
+description = "Session lifetime and login methods."
+order = 10
+
+[sections.ui.vars.UI_JWT_EXPIRATION_MINUTES]
+label = "JWT expiration (minutes)"
+description = "Idle session timeout; activity refreshes the session."
+type = "integer"
+widget = "number"
+default = "60"
+validate = "positive_int"
+order = 10
+
+[sections.ui.vars.UI_COOKIE_MAX_AGE_MINUTES]
+label = "Cookie max age (minutes)"
+description = "Maximum time the browser keeps the session cookie."
+type = "integer"
+widget = "number"
+default = "1440"
+validate = "positive_int"
+order = 20
+
+[sections.ui.vars.UI_ENABLE_SESSION_DEBUG]
+label = "Enable session debug panel"
+description = "Shows session debug details on the user's own profile page."
+type = "boolean"
+widget = "checkbox"
+default = "false"
+validate = "bool"
+order = 30
+
+[sections.ui.vars.UI_COLLAPSE_LOCAL_LOGIN]
+label = "Collapse local login"
+description = "Show local login in a collapsible section below OIDC buttons. Only affects the login page when at least one OIDC provider is enabled."
+type = "boolean"
+widget = "checkbox"
+default = "false"
+validate = "bool"
+order = 40
+
+# ---------------------------------------------------------------------------
+# Reporter
+# ---------------------------------------------------------------------------
+
+[sections.reporter]
+title = "Reporter"
+description = "Report API fetch size. (REPORT_OUT_DIR is always read from the environment.)"
+order = 20
+
+[sections.reporter.vars.REPORT_API_BATCH_SIZE]
+label = "Report API batch size"
+description = "Records fetched per PrivX API call when running reports."
+type = "integer"
+widget = "number"
+default = "500"
+validate = "positive_int"
+order = 10
+
+# ---------------------------------------------------------------------------
+# PrivX API (reporter + sync)
+# ---------------------------------------------------------------------------
+
+[sections.privx]
+title = "PrivX API"
+description = "Hostname, credentials, and optional custom CA for PrivX API access."
+order = 30
+
+[sections.privx.vars.PRIVX_HOSTNAME]
+label = "PrivX hostname"
+description = "PrivX server host name (no scheme)."
+type = "string"
+widget = "text"
+default = "privx.example.com"
+validate = "non_empty"
+order = 10
+
+[sections.privx.vars.PRIVX_PORT]
+label = "PrivX port"
+description = "HTTPS port for PrivX API access."
+type = "integer"
+widget = "number"
+default = "443"
+validate = "port"
+order = 20
+
+[sections.privx.vars.PRIVX_API_OAUTH_CLIENT_ID]
+label = "API OAuth client ID"
+description = "OAuth client id for external PrivX API access."
+type = "string"
+widget = "text"
+default = "privx-external"
+validate = "non_empty"
+order = 30
+
+[sections.privx.vars.PRIVX_API_OAUTH_CLIENT_SECRET]
+label = "API OAuth client secret"
+description = "OAuth client secret for external PrivX API access."
+type = "string"
+widget = "password"
+default = ""
+validate = "non_empty"
+sensitive = true
+order = 40
+
+[sections.privx.vars.PRIVX_API_CLIENT_ID]
+label = "API client ID"
+description = "PrivX API client id used by sync/reporting integrations."
+type = "string"
+widget = "text"
+default = ""
+optional = true
+order = 50
+
+[sections.privx.vars.PRIVX_API_CLIENT_SECRET]
+label = "API client secret"
+description = "PrivX API client secret used by sync/reporting integrations."
+type = "string"
+widget = "password"
+default = ""
+optional = true
+sensitive = true
+order = 60
+
+[sections.privx.vars.PRIVX_CA_CERT]
+label = "PrivX CA certificate (PEM)"
+description = "Optional trust anchor; leave empty to use system trust store."
+type = "pem"
+widget = "textarea"
+default = ""
+optional = true
+order = 70
+
+# ---------------------------------------------------------------------------
+# Sync server
+# ---------------------------------------------------------------------------
+
+[sections.sync]
+title = "Sync server"
+description = "Scheduling, adaptive windows, and per-source retention for the sync service."
+order = 40
+
+[sections.sync.vars.SYNC_WINDOW_SIZES_MINUTES]
+label = "Window sizes (minutes)"
+description = "Comma-separated adaptive window sizes, e.g. 8,12,16,20,24,28,32."
+type = "csv"
+widget = "text"
+default = "8,12,16,20,24,28,32"
+validate = "non_empty"
+order = 10
+
+[sections.sync.vars.SYNC_WINDOW_SIZE_DOWN_MINUTES]
+label = "Window shrink step (minutes)"
+description = "Minutes removed when shrinking a window that exceeded the record threshold."
+type = "integer"
+widget = "number"
+default = "4"
+validate = "positive_int"
+order = 20
+
+[sections.sync.vars.SYNC_MAX_RECORDS_PER_WINDOW]
+label = "Max records per window"
+description = "Grow/shrink threshold for adaptive sync windows."
+type = "integer"
+widget = "number"
+default = "10000"
+validate = "positive_int"
+order = 30
+
+[sections.sync.vars.SYNC_BATCH_SIZE]
+label = "API batch size"
+description = "Records fetched per PrivX API call during sync."
+type = "integer"
+widget = "number"
+default = "1000"
+validate = "positive_int"
+order = 40
+
+[sections.sync.vars.SYNC_CONNECTION]
+label = "Connection source"
+description = "interval_minutes,initial_range_minutes,retention_days — e.g. 5,10,15."
+type = "tuple3"
+widget = "text"
+default = "5,10,15"
+validate = "sync_triple"
+order = 50
+
+[sections.sync.vars.SYNC_AUDIT]
+label = "Audit source"
+description = "interval_minutes,initial_range_minutes,retention_days — e.g. 5,10,15."
+type = "tuple3"
+widget = "text"
+default = "5,10,15"
+validate = "sync_triple"
+order = 60
+
+[sections.sync.vars.SYNC_MAX_RANGE_HOURS]
+label = "Max sync range (hours)"
+description = "Maximum look-back from latest stored timestamp; increase for backfill."
+type = "integer"
+widget = "number"
+default = "2191"
+validate = "positive_int"
+order = 70
+
+[sections.sync.vars.SYNC_SOURCES]
+label = "Sync sources (order)"
+description = "Comma-separated sources processed in listed order."
+type = "csv"
+widget = "text"
+default = "trends,concurrent,connection,audit"
+validate = "non_empty"
+order = 80
+
+[sections.sync.vars.SYNC_TREND_HOUR]
+label = "Trend refresh hour (UTC)"
+description = "Hour (0–23) when daily system_trend metrics are collected."
+type = "integer"
+widget = "number"
+default = "1"
+validate = "hour_utc"
+order = 90
+
+# ---------------------------------------------------------------------------
+# Backup server
+# ---------------------------------------------------------------------------
+
+[sections.backup]
+title = "Backup server"
+description = "Backup schedule for reporter-backup. (BACKUP_DIR is always read from the environment.)"
+order = 45
+
+[sections.backup.vars.BACKUP_CONFIG]
+label = "Backup config (<enabled>,<target>,<interval-minutes>,<snapshots>)"
+description = "Schedule format: enabled,target,interval,snapshots (e.g. true,all,720,5). If disabled, reporter-backup checks every 5 minutes whether it has been enabled."
+type = "string"
+widget = "text"
+default = "false,all,720,5"
+validate = "backup_config"
+order = 10
+
+# ---------------------------------------------------------------------------
+# OIDC — global (all providers)
+# ---------------------------------------------------------------------------
+
+[sections.oidc_global]
+title = "OIDC (global)"
+description = "Auto-provisioning and group mapping applied across configured IdP slots."
+order = 50
+
+[sections.oidc_global.vars.OIDC_AUTO_PROVISION]
+label = "Auto-provision local users"
+description = "Create Reporter users on first successful IdP login."
+type = "boolean"
+widget = "checkbox"
+default = "false"
+validate = "bool"
+order = 10
+
+[sections.oidc_global.vars.OIDC_AUTO_PROVISION_DEFAULT_ROLE]
+label = "Default role for new users"
+description = "User group for auto-provisioned accounts (not admin or superadmin)."
+type = "string"
+widget = "text"
+default = "viewer"
+optional = true
+order = 20
+
+[sections.oidc_global.vars.OIDC_AUTO_PROVISION_REQUIRE_EMAIL]
+label = "Require email claim"
+description = "Reject auto-provision when the IdP token has no email."
+type = "boolean"
+widget = "checkbox"
+default = "false"
+validate = "bool"
+order = 30
+
+[sections.oidc_global.vars.OIDC_AUTO_PROVISION_ALLOWED_EMAIL_DOMAINS]
+label = "Allowed email domains"
+description = "Comma-separated allowlist; empty allows all domains when email is required."
+type = "csv"
+widget = "text"
+default = ""
+optional = true
+order = 40
+
+[sections.oidc_global.vars.OIDC_GROUP_CLAIM]
+label = "Group claim path"
+description = "Claim path for IdP groups, e.g. groups or realm_access.roles."
+type = "string"
+widget = "text"
+default = "groups"
+optional = true
+order = 50
+
+[sections.oidc_global.vars.OIDC_GROUP_MAPPING]
+label = "Group mapping (JSON)"
+description = "Maps IdP group values to Reporter user groups, e.g. {\"idp-admin\":\"admin\"}."
+type = "json"
+widget = "textarea"
+default = "{}"
+validate = "json_object"
+optional = true
+order = 60
+
+# ---------------------------------------------------------------------------
+# OIDC — provider slot 1
+# ---------------------------------------------------------------------------
+
+[sections.oidc_1]
+title = "OIDC provider 1"
+description = "First external IdP configuration."
+order = 60
+
+[sections.oidc_1.vars.OIDC_1_ENABLED]
+label = "Enable OIDC provider 1"
+description = "Show this provider on the login page."
+type = "boolean"
+widget = "checkbox"
+default = "false"
+validate = "bool"
+order = 1
+
+[sections.oidc_1.vars.OIDC_1_NAME]
+label = "Display name"
+description = "Button label shown on the login page (e.g. Keycloak, Entra ID)."
+type = "string"
+widget = "text"
+default = "OIDC 1"
+optional = true
+order = 5
+
+[sections.oidc_1.vars.OIDC_1_ICON]
+label = "Icon"
+description = "SVG icon shown on the login button."
+type = "string"
+widget = "select"
+default = "generic-openid.svg"
+optional = true
+validate = "oidc_icon"
+order = 6
+
+[sections.oidc_1.vars.OIDC_1_ISSUER]
+label = "Issuer URL"
+description = "OIDC issuer; trailing slash is normalized at runtime."
+type = "string"
+widget = "text"
+default = ""
+optional = true
+validate = "url"
+order = 10
+
+[sections.oidc_1.vars.OIDC_1_CLIENT_ID]
+label = "Client ID"
+type = "string"
+widget = "text"
+default = ""
+optional = true
+order = 20
+
+[sections.oidc_1.vars.OIDC_1_CLIENT_SECRET]
+label = "Client secret"
+type = "string"
+widget = "password"
+default = ""
+optional = true
+sensitive = true
+order = 30
+
+[sections.oidc_1.vars.OIDC_1_REDIRECT_URI]
+label = "Redirect URI"
+description = "Must match IdP app registration exactly (auth callback)."
+type = "string"
+widget = "text"
+default = "http://localhost:8501/0_Login"
+optional = true
+validate = "url"
+order = 40
+
+[sections.oidc_1.vars.OIDC_1_POST_LOGOUT_REDIRECT_URI]
+label = "Post-logout redirect URI"
+type = "string"
+widget = "text"
+default = "http://localhost:8501/"
+optional = true
+validate = "url"
+order = 50
+
+[sections.oidc_1.vars.OIDC_1_SCOPES]
+label = "Scopes"
+type = "string"
+widget = "text"
+default = "openid profile email"
+optional = true
+order = 60
+
+[sections.oidc_1.vars.OIDC_1_PROMPT]
+label = "Prompt"
+description = "OIDC prompt parameter; use select_account for Entra if needed."
+type = "string"
+widget = "text"
+default = "select_account"
+optional = true
+order = 70
+
+[sections.oidc_1.vars.OIDC_1_STATE_SECRET]
+label = "State signing secret"
+description = "Long random secret for CSRF protection on the state parameter."
+type = "string"
+widget = "password"
+default = ""
+optional = true
+sensitive = true
+validate = "non_empty_when_slot_enabled"
+order = 80
+
+# ---------------------------------------------------------------------------
+# OIDC — provider slot 2 (same shape as slot 1)
+# ---------------------------------------------------------------------------
+
+[sections.oidc_2]
+title = "OIDC provider 2"
+description = "Second external IdP configuration (optional)."
+order = 70
+
+[sections.oidc_2.vars.OIDC_2_ENABLED]
+label = "Enable OIDC provider 2"
+description = "Show this provider on the login page."
+type = "boolean"
+widget = "checkbox"
+default = "false"
+validate = "bool"
+order = 1
+
+[sections.oidc_2.vars.OIDC_2_NAME]
+label = "Display name"
+description = "Button label shown on the login page (e.g. Keycloak, Entra ID)."
+type = "string"
+widget = "text"
+default = "OIDC 2"
+optional = true
+order = 5
+
+[sections.oidc_2.vars.OIDC_2_ICON]
+label = "Icon"
+description = "SVG icon shown on the login button."
+type = "string"
+widget = "select"
+default = "generic-openid.svg"
+optional = true
+validate = "oidc_icon"
+order = 6
+
+[sections.oidc_2.vars.OIDC_2_ISSUER]
+label = "Issuer URL"
+type = "string"
+widget = "text"
+default = ""
+optional = true
+validate = "url"
+order = 10
+
+[sections.oidc_2.vars.OIDC_2_CLIENT_ID]
+label = "Client ID"
+type = "string"
+widget = "text"
+default = ""
+optional = true
+order = 20
+
+[sections.oidc_2.vars.OIDC_2_CLIENT_SECRET]
+label = "Client secret"
+type = "string"
+widget = "password"
+default = ""
+optional = true
+sensitive = true
+order = 30
+
+[sections.oidc_2.vars.OIDC_2_REDIRECT_URI]
+label = "Redirect URI"
+type = "string"
+widget = "text"
+default = ""
+optional = true
+validate = "url"
+order = 40
+
+[sections.oidc_2.vars.OIDC_2_POST_LOGOUT_REDIRECT_URI]
+label = "Post-logout redirect URI"
+type = "string"
+widget = "text"
+default = ""
+optional = true
+validate = "url"
+order = 50
+
+[sections.oidc_2.vars.OIDC_2_SCOPES]
+label = "Scopes"
+type = "string"
+widget = "text"
+default = "openid profile email"
+optional = true
+order = 60
+
+[sections.oidc_2.vars.OIDC_2_PROMPT]
+label = "Prompt"
+type = "string"
+widget = "text"
+default = "login"
+optional = true
+order = 70
+
+[sections.oidc_2.vars.OIDC_2_STATE_SECRET]
+label = "State signing secret"
+type = "string"
+widget = "password"
+default = ""
+optional = true
+sensitive = true
+validate = "non_empty_when_slot_enabled"
+order = 80
+

@@ -16,11 +16,13 @@ REPORTS_PAGE_TITLE = "PrivX Reporter - Reports"
 REPORTS_PAGE_DESCRIPTION = "No report selected. Please select a report from the sidebar."
 
 REPORT_FILES_PAGE_TITLE = "PrivX Reporter - Report Files"
+USER_PAGE_TITLE = "PrivX Reporter - My Page"
 
 USERS_PAGE_TITLE = "PrivX Reporter - Users"
 USER_PROFILE_PAGE_TITLE = "PrivX Reporter - User Profile"
 USER_GROUPS_PAGE_TITLE = "PrivX Reporter - User Groups"
 REPORT_GROUPS_PAGE_TITLE = "PrivX Reporter - Report Groups"
+APP_CONFIG_PAGE_TITLE = "PrivX Reporter - App Configuration"
 
 
 PAGE_STYLE = (
@@ -32,6 +34,19 @@ PAGE_STYLE = (
     }
     [data-testid="stMainMenu"] {display:none !important;}
     [data-testid="stSidebarNav"] { display: none !important; }
+    section[data-testid="stSidebar"] {
+      background: %(theme_color)s !important;
+      background-color: %(theme_color)s !important;
+      background-image: none !important;
+    }
+    section[data-testid="stSidebar"]::before,
+    section[data-testid="stSidebar"]::after,
+    section[data-testid="stSidebar"] > div,
+    section[data-testid="stSidebar"] > div:first-child {
+      background: %(theme_color)s !important;
+      background-color: %(theme_color)s !important;
+      background-image: none !important;
+    }
     [data-testid="stSidebarContent"] {
       margin-top: -60px;
     }
@@ -40,6 +55,9 @@ PAGE_STYLE = (
     }
     [data-testid="stMain"] {
       margin-top: -50px;
+    }
+    section[data-testid="stSidebar"] [data-testid="stImage"] img {
+      border-radius: 0 !important;
     }
     /* Keep help icons next to widget labels instead of right edge. */
     label[data-testid="stWidgetLabel"] {

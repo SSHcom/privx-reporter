@@ -1,0 +1,11 @@
+#!/bin/bash
+# Dev implementation script for admin password CLI.
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(realpath "$script_dir/../../../..")"
+cd "$repo_root"
+
+export PYTHONPATH="$repo_root/apps/python${PYTHONPATH:+:$PYTHONPATH}"
+exec uv run dotenv run -- python -m lib._admin.passwd "$@"

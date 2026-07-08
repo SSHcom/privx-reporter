@@ -21,9 +21,9 @@ class _FakeResponse:
 
 @pytest.mark.unit
 def test_build_oidc_logout_url_uses_discovery_end_session_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("ENTRA_OIDC_ISSUER", "https://login.microsoftonline.com/tenant/v2.0")
-    monkeypatch.setenv("ENTRA_OIDC_CLIENT_ID", "client-123")
-    monkeypatch.setenv("ENTRA_OIDC_POST_LOGOUT_REDIRECT_URI", "http://localhost:8501/")
+    monkeypatch.setenv("OIDC_2_ISSUER", "https://login.microsoftonline.com/tenant/v2.0")
+    monkeypatch.setenv("OIDC_2_CLIENT_ID", "client-123")
+    monkeypatch.setenv("OIDC_2_POST_LOGOUT_REDIRECT_URI", "http://localhost:8501/")
     monkeypatch.setattr(
         oidc_logout.requests,
         "get",
@@ -33,7 +33,7 @@ def test_build_oidc_logout_url_uses_discovery_end_session_endpoint(monkeypatch: 
     )
     monkeypatch.setattr(oidc_logout, "st", SimpleNamespace(session_state={"oidc_id_token": "id-token"}))
 
-    logout_url = oidc_logout._build_oidc_logout_url(provider_name="entra")
+    logout_url = oidc_logout._build_oidc_logout_url(slot=2)
 
     assert logout_url is not None
     parsed = urlparse(logout_url)
@@ -47,11 +47,11 @@ def test_build_oidc_logout_url_uses_discovery_end_session_endpoint(monkeypatch: 
 
 @pytest.mark.unit
 def test_build_oidc_logout_url_returns_none_without_end_session_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("ENTRA_OIDC_ISSUER", "https://login.microsoftonline.com/tenant/v2.0")
-    monkeypatch.setenv("ENTRA_OIDC_CLIENT_ID", "client-123")
-    monkeypatch.setenv("ENTRA_OIDC_POST_LOGOUT_REDIRECT_URI", "http://localhost:8501/")
+    monkeypatch.setenv("OIDC_2_ISSUER", "https://login.microsoftonline.com/tenant/v2.0")
+    monkeypatch.setenv("OIDC_2_CLIENT_ID", "client-123")
+    monkeypatch.setenv("OIDC_2_POST_LOGOUT_REDIRECT_URI", "http://localhost:8501/")
     monkeypatch.setattr(oidc_logout.requests, "get", lambda *_args, **_kwargs: _FakeResponse({}))
 
-    logout_url = oidc_logout._build_oidc_logout_url(provider_name="entra")
+    logout_url = oidc_logout._build_oidc_logout_url(slot=2)
 
     assert logout_url is None

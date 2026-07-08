@@ -1,4 +1,4 @@
 #!/bin/bash
 # Dev implementation script for admin CLI.
 
-uv run dotenv run -- admin "$@"
+uv run dotenv run -- python -m lib._admin.main "$@"

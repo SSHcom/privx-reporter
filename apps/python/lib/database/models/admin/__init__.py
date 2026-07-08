@@ -1,6 +1,7 @@
 """Admin database table models."""
 
 from lib.database.models.admin.alt_group import AltGroupTable
+from lib.database.models.admin.app_config import AppConfigTable
 from lib.database.models.admin.alt_group_view import AltGroupViewTable
 from lib.database.models.admin.audit_event_sync_table import AuditEventSyncTable
 from lib.database.models.admin.migration_history import MigrationHistoryTable
@@ -11,6 +12,7 @@ from lib.database.models.admin.user_group import UserGroupTable
 from lib.database.models.admin.user_group_report import UserGroupReportTable
 
 __all__ = [
+    "AppConfigTable",
     "AltGroupTable",
     "AltGroupViewTable",
     "AuditEventSyncTable",

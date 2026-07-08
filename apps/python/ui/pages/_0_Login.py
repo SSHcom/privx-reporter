@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 import streamlit as st
 from streamlit.logger import get_logger
 
@@ -11,6 +9,8 @@ from ui.services.page_bootstrap import setup_page
 from ui.services.session import keys, session_manager
 from ui.services.session.state import hydrate_authenticated_state, init_session_state
 from ui.utils.password import validate_password
+from lib.service.env_source import reloadEnv
+from lib import env_oidc
 from ui.views.login import (
     clear_oidc_auth_state,
     complete_oidc_login,
@@ -18,7 +18,6 @@ from ui.views.login import (
     render_oidc_login,
 )
 
-AUTH_MODE_ENV = "UI_AUTH_MODE"
 logger = get_logger(__name__)
 
 
@@ -43,16 +42,17 @@ def _preview(value: object) -> str:
     return s if len(s) <= 10 else f"{s[:6]}...{s[-4:]}"
 
 
-def _get_auth_modes() -> list[str]:
-    raw = os.getenv(AUTH_MODE_ENV, "local").strip().lower()
-    modes = [mode.strip() for mode in raw.split(",") if mode.strip()]
-    logger.info("Login auth modes raw=%s parsed=%s", raw, modes)
-    return modes
+def _get_enabled_oidc_providers() -> list[str]:
+    """Return list of enabled OIDC provider slots (e.g. ['1', '2'])."""
+    providers = [str(slot) for slot in env_oidc.get_enabled_slots()]
+    logger.info("Enabled OIDC providers=%s", providers)
+    return providers
 
 
-def _render_local_login() -> None:
+def _render_local_login(*, show_info: bool = True) -> None:
     logger.info("Rendering local login form")
-    st.info("Sign in using local credentials.")
+    if show_info:
+        st.info("Sign in using local credentials.")
     with st.form("login_form"):
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
@@ -85,6 +85,7 @@ def _render_local_login() -> None:
 
 
 def main() -> None:
+    reloadEnv()
     logger.info(
         "Login page start query_keys=%s has_code=%s has_state=%s error=%s",
         sorted(st.query_params.keys()),
@@ -114,30 +115,24 @@ def main() -> None:
 
     st.title(constants.APP_TITLE)
 
-    auth_modes = _get_auth_modes()
+    oidc_providers = _get_enabled_oidc_providers()
+    collapse_local = env_oidc.env_flag("UI_COLLAPSE_LOCAL_LOGIN", default=False) and oidc_providers
 
-    # If only OIDC is enabled and not local, we might still want local for emergency
-    # but the requirement says if UI_AUTH_MODE has them, show them.
-    # Usually "local" is also in the list if desired.
-
-    if "local" in auth_modes or not auth_modes:
-        _render_local_login()
-
-    oidc_providers = [m for m in auth_modes if m != "local"]
-    logger.info("Login page providers local_enabled=%s oidc_providers=%s", "local" in auth_modes, oidc_providers)
-    if oidc_providers:
-        if "local" in auth_modes:
-            st.write("---")
+    if collapse_local:
         st.info("Sign in using your Identity Provider.")
         for provider in oidc_providers:
-            if provider == "oidc":
-                logger.info("Skipping deprecated provider id=%s", provider)
-                st.warning(
-                    "Deprecated provider id 'oidc' is not supported. Use a named provider and <PROVIDER>_OIDC_*."
-                )
-                continue
             logger.info("Rendering OIDC login button provider=%s", provider)
             render_oidc_login(provider)
+        with st.expander("Sign in with local credentials"):
+            _render_local_login(show_info=False)
+    else:
+        _render_local_login()
+        if oidc_providers:
+            st.write("---")
+            st.info("Sign in using your Identity Provider.")
+            for provider in oidc_providers:
+                logger.info("Rendering OIDC login button provider=%s", provider)
+                render_oidc_login(provider)
 
 
 main()

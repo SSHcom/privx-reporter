@@ -33,13 +33,13 @@ def test_start_session_persists_oidc_access_token(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(session_manager, "st", st_stub)
     monkeypatch.setattr(session_manager.session_repo, "create_session", create_session)
     monkeypatch.setattr(session_manager, "_set_session_cookie", set_cookie)
-    monkeypatch.setenv("UI_AUTH_MODE", "local,entra")
+    monkeypatch.setenv("OIDC_2_ENABLED", "true")
 
     # Execute: Start a new OIDC session with all required tokens
     now = dt.datetime.now(dt.UTC)
     token = session_manager.start_session(
         user_id=42,
-        auth_source="oidc:entra",
+        auth_source="oidc:2",
         oidc_access_token="test-access-token",
         oidc_refresh_token="test-refresh-token",
         oidc_access_expires_at=now,
@@ -53,7 +53,7 @@ def test_start_session_persists_oidc_access_token(monkeypatch: pytest.MonkeyPatc
     create_session.assert_called_once_with(
         user_id=42,
         token="opaque-token",
-        auth_source="oidc:entra",
+        auth_source="oidc:2",
         oidc_access_token="test-access-token",
         oidc_refresh_token="test-refresh-token",
         oidc_access_expires_at=now,
@@ -75,7 +75,7 @@ def test_restore_session_hydrates_oidc_access_token_with_expiry(monkeypatch: pyt
     # Patch session manager dependencies to return a valid session token
     monkeypatch.setattr(session_manager, "st", st_stub)
     monkeypatch.setattr(session_manager, "get_session_token", lambda: "opaque-token")
-    monkeypatch.setenv("UI_AUTH_MODE", "local,entra")
+    monkeypatch.setenv("OIDC_2_ENABLED", "true")
 
     # Setup: Configure token expiry 1 hour in the future to avoid triggering refresh
     now = dt.datetime.now(dt.UTC)
@@ -89,7 +89,7 @@ def test_restore_session_hydrates_oidc_access_token_with_expiry(monkeypatch: pyt
             "id": 7,
             "user_id": 99,
             "token_jti": token,
-            "auth_source": "oidc:entra",
+            "auth_source": "oidc:2",
             "oidc_access_token": "persisted-access-token",
             "oidc_refresh_token": "persisted-refresh-token",
             "oidc_id_token": "persisted-id-token",

@@ -6,15 +6,15 @@ It focuses on implementation behavior and extension points, not operations troub
 
 ## Auth Mode Selection
 
-UI auth modes are driven by `UI_AUTH_MODE` (comma-separated):
+Local login is always available. OIDC providers are enabled via:
 
-- `local` enables username/password login
-- other values are treated as OIDC provider IDs (for example `keycloak`, `entra`)
+- `OIDC_1_ENABLED=true` - Enable OIDC provider 1
+- `OIDC_2_ENABLED=true` - Enable OIDC provider 2
 
 Routing and rendering are handled in `apps/python/ui/pages/_0_Login.py`:
 
-- local login form via `_render_local_login()`
-- provider buttons via `render_oidc_login(provider)`
+- local login form via `_render_local_login()` (always rendered)
+- provider buttons via `render_oidc_login(provider)` for enabled providers
 
 ## Local Login Flow
 
@@ -67,7 +67,8 @@ Behavior:
 - if auto-provision enabled -> creates local user in mapped/default group
 - group mapping is applied only during creation, not retroactive updates
 
-Primary env parsing helpers live in `apps/python/ui/views/login/oidc_config.py` and `apps/python/ui/views/login/oidc_groups.py`.
+OIDC configuration values are read via `lib.service.env_source.getEnv()` (env or DB-backed, depending on `ENV_SOURCE`) and centralized in `apps/python/lib/env_oidc.py`.
+`apps/python/ui/views/login/oidc_config.py` focuses on provider presentation loading (name/icon/discovery), while `apps/python/ui/views/login/oidc_groups.py` handles optional group-claim mapping.
 
 ## Session Model
 
@@ -79,14 +80,15 @@ Session model is managed by `apps/python/ui/services/session/session_manager.py`
 `auth_source` values:
 
 - `local`
-- `oidc:<provider>`
+- `oidc:1` (OIDC provider 1)
+- `oidc:2` (OIDC provider 2)
 
 Key restore behavior:
 
 - restore requires valid Reporter session and valid auth-source model
 - OIDC access refresh is attempted near expiry
 - refresh failure ends Reporter session (fail-closed)
-- only allowed auth sources from `UI_AUTH_MODE` are accepted on restore
+- only allowed auth sources (`local` + enabled OIDC providers) are accepted on restore
 
 ## Security-Critical Contracts
 
@@ -106,6 +108,7 @@ When changing auth/OIDC code, preserve these behaviors:
 - `apps/python/ui/views/login/oidc.py`
 - `apps/python/ui/views/login/oidc_callback.py`
 - `apps/python/ui/views/login/oidc_config.py`
+- `apps/python/lib/env_oidc.py`
 - `apps/python/ui/views/login/oidc_crypto.py`
 - `apps/python/ui/views/login/oidc_groups.py`
 - `apps/python/ui/services/session/session_manager.py`

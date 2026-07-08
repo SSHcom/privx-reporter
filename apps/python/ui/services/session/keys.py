@@ -17,6 +17,11 @@ SELECTED_SUBCOMMAND = "selected_subcommand"
 SELECTED_ALT_GROUP_VIEW = "selected_alt_group_view"
 DASHBOARD_VIEW = "dashboard_view"
 SESSION_TOKEN = "session_token"
+PRIVX_USER_ID = "privx_user_id"
+PRIVX_USER_IDS = "privx_user_ids"
+PRIVX_USER_MATCHES = "privx_user_matches"
+PRIVX_USER_LOOKUP_USERNAME = "privx_user_lookup_username"
+PRIVX_USER_LOOKUP_DONE = "privx_user_lookup_done"
 
 
 def report_result_key(subcommand_key: str) -> str:

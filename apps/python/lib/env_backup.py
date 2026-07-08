@@ -2,16 +2,25 @@
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
+from pathlib import Path
+
+from lib.service.env_source import getEnv
 
 BACKUP_CONFIG = "BACKUP_CONFIG"
-DEFAULT_BACKUP_CONFIG = "true,all,720,5"
+BACKUP_DIR = "BACKUP_DIR"
+BACKUP_DIR_BASENAME = "REPORTER-BACKUP"
+DEFAULT_BACKUP_CONFIG = "false,all,720,5"
 
 ENABLED_VALUES = {"true", "false"}
 TARGET_VALUES = {"admin", "data", "all"}
 INTERVAL_MINUTES_MIN = 60
 SNAPSHOTS_MIN = 1
+
+
+def default_backup_dir() -> str:
+    """Return the default backup directory under the current user's home directory."""
+    return str(Path.home() / BACKUP_DIR_BASENAME)
 
 
 @dataclass(frozen=True)
@@ -25,13 +34,11 @@ class BackupConfig:
 def parse_backup_config(raw_value: str | None = None) -> BackupConfig:
     """Parse a BACKUP_CONFIG string into a typed config, raising ValueError on bad input."""
     if raw_value is None:
-        raw_value = os.getenv(BACKUP_CONFIG, DEFAULT_BACKUP_CONFIG)
+        raw_value = getEnv(BACKUP_CONFIG, DEFAULT_BACKUP_CONFIG)
 
     parts = [part.strip() for part in raw_value.split(",")]
     if len(parts) != 4:
-        raise ValueError(
-            f"{BACKUP_CONFIG} must be '<enabled>,<target>,<interval-minutes>,<snapshots>'"
-        )
+        raise ValueError(f"{BACKUP_CONFIG} must be '<enabled>,<target>,<interval-minutes>,<snapshots>'")
 
     enabled_raw, target, interval_raw, snapshots_raw = parts
 

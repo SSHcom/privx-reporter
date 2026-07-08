@@ -50,9 +50,7 @@ def test_dry_run_messages_summarizes_install_files_as_opt_reporter(tmp_path: Pat
         (tmp_path / ".env", ".env"),
     ]
     lines = dry_run_messages(backup_dir, members)
-    assert lines[1] == (
-        "Dry-run: Would have backed up .backup/admin.dump, and other files from /opt/reporter"
-    )
+    assert lines[1] == ("Dry-run: Would have backed up .backup/admin.dump, and other files from /opt/reporter")
 
 
 @pytest.mark.unit
@@ -70,8 +68,7 @@ def test_dry_run_messages_dev_only_when_backup_dir_empty(tmp_path: Path) -> None
     backup_dir = tmp_path / ".backup"
     backup_dir.mkdir()
     assert dry_run_messages(backup_dir, []) == [
-        "Dry-run: Assuming backup command is running in development mode. "
-        "Skipping actual backup....",
+        "Dry-run: Assuming backup command is running in development mode. Skipping actual backup....",
     ]
 
 

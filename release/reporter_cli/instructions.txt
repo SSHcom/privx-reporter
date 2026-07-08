@@ -19,12 +19,12 @@ Run post-install validation checks and apply security package pins:
 
   post_install --secure
 
-Create the "/opt/reporter/.env" file:
+Create the "/opt/reporter/.env" file with default database config:
 
-  create_env --db defaults --sync defaults --ui defaults
+  create_env --skip db
 
-  If you need to make adjustments, run without "--<db|syc|ui> defaults"
-  as needed or manuallly modify .env
+  Only configure the database if the ports 5454 and 5455 are already in use.
+  To use default values for the database, sync server and ui use "--skip db sync ui"
 
 Before starting Docker Compose:
 
@@ -32,15 +32,32 @@ Before starting Docker Compose:
     privxsshcom/privx-reporter-sync:latest
     privxsshcom/privx-reporter-ui:latest
 
- - Create report output directory:
+ - Create host directories (use values from "/opt/reporter/.env"):
 
-    mkdir -p <REPORT_OUT_DIR>   # Use the value of REPORT_OUT_DIR 
-                                # from "/opt/reporter/.env"
+    mkdir -p /opt/reporter/.volumes/data-db /opt/reporter/.volumes/admin-db
+    mkdir -p <REPORT_OUT_DIR>
+    mkdir -p <BACKUP_DIR>
 
 Start sync, UI, and local databases:
 
   cd /opt/reporter
-  docker compose up -d
+
+Two compose files are installed. Use the one that matches ENV_SOURCE in /opt/reporter/.env:
+
+  ENV_SOURCE=db (default docker-compose.yml) — config in Admin UI after login:
+    docker compose up -d
+
+  ENV_SOURCE=env — all config in .env:
+    docker compose -f docker-compose-env.yml up -d
+
+Set the UI super-admin password before first login (bootstrap creates admin
+with an unknown password):
+
+  docker exec -it reporter-ui /opt/reporter/bin/admin_passwd
+
+Then open https://<host>:8501 and sign in as admin.
+
+If ENV_SOURCE=db, complete remaining settings in Admin UI -> App Config.
 
 Verify that the reporter and admin tools can be run:
 

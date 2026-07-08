@@ -12,6 +12,7 @@ import streamlit as st
 
 from ui.services.permissions import UserPermissions, can_edit_profile, is_admin, is_superadmin_username
 from ui.services.session import keys as keys
+from ui.services.user_service import get_privx_user_ids
 
 
 def init_session_state() -> None:
@@ -61,6 +62,21 @@ def init_session_state() -> None:
     if keys.SESSION_TOKEN not in st.session_state:
         st.session_state[keys.SESSION_TOKEN] = None
 
+    if keys.PRIVX_USER_ID not in st.session_state:
+        st.session_state[keys.PRIVX_USER_ID] = None
+
+    if keys.PRIVX_USER_IDS not in st.session_state:
+        st.session_state[keys.PRIVX_USER_IDS] = []
+
+    if keys.PRIVX_USER_MATCHES not in st.session_state:
+        st.session_state[keys.PRIVX_USER_MATCHES] = []
+
+    if keys.PRIVX_USER_LOOKUP_USERNAME not in st.session_state:
+        st.session_state[keys.PRIVX_USER_LOOKUP_USERNAME] = None
+
+    if keys.PRIVX_USER_LOOKUP_DONE not in st.session_state:
+        st.session_state[keys.PRIVX_USER_LOOKUP_DONE] = False
+
 
 def require_auth() -> None:
     """Redirect to login when the user is not authenticated."""
@@ -73,6 +89,7 @@ def hydrate_authenticated_state(user_row: dict[str, Any]) -> None:
     prior_username = st.session_state.get(keys.USERNAME)
     prior_group = st.session_state.get(keys.USER_GROUP)
     should_reset_report_cache = prior_username != user_row["name"] or prior_group != user_row["group_name"]
+    should_reset_privx_lookup_cache = prior_username != user_row["name"]
 
     permissions = UserPermissions(
         group=user_row["group_name"],
@@ -90,6 +107,20 @@ def hydrate_authenticated_state(user_row: dict[str, Any]) -> None:
     if should_reset_report_cache:
         st.session_state[keys.VIEWABLE_REPORTS] = None
         st.session_state[keys.RESOLVED_REPORT_VIEWS] = None
+
+    if should_reset_privx_lookup_cache:
+        st.session_state[keys.PRIVX_USER_ID] = None
+        st.session_state[keys.PRIVX_USER_IDS] = []
+        st.session_state[keys.PRIVX_USER_MATCHES] = []
+        st.session_state[keys.PRIVX_USER_LOOKUP_USERNAME] = None
+        st.session_state[keys.PRIVX_USER_LOOKUP_DONE] = False
+
+    # Resolve local-authenticated UI user to matching PrivX users once per username.
+    # Page/view permission checks rely on this cached session state.
+    if str(st.session_state.get("auth_source") or "").strip().lower() == "local":
+        username = str(st.session_state.get(keys.USERNAME) or "").strip()
+        if username:
+            get_privx_user_ids(username)
 
     # if st.session_state.get(keys.RESOLVED_REPORT_VIEWS) is None:
     #    from ui.services import report_view_resolver
@@ -190,6 +221,11 @@ def clear_authenticated_state() -> None:
     st.session_state[keys.SELECTED_SUBCOMMAND] = None
     st.session_state[keys.SELECTED_ALT_GROUP_VIEW] = None
     st.session_state[keys.SESSION_TOKEN] = None
+    st.session_state[keys.PRIVX_USER_ID] = None
+    st.session_state[keys.PRIVX_USER_IDS] = []
+    st.session_state[keys.PRIVX_USER_MATCHES] = []
+    st.session_state[keys.PRIVX_USER_LOOKUP_USERNAME] = None
+    st.session_state[keys.PRIVX_USER_LOOKUP_DONE] = False
 
 
 __all__ = [

@@ -1,4 +1,4 @@
 #!/bin/bash
 # Dev implementation script for sync server.
 
-uv run dotenv run sync-server "$@"
+uv run dotenv run -- python -m sync_server.main "$@"

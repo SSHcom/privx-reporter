@@ -6,10 +6,10 @@
 # Other commands output to file by default (unless --to-stdout is used)
 if [[ " $* " == *" --to-stdout "* ]] || [[ " $* " == *" list "* && " $* " != *" --to-file "* ]]; then
   # Outputting to stdout - don't add empty lines
-  uv run dotenv run -- report "$@"
+  uv run dotenv run -- python -m lib._report.main "$@"
 else
   # Outputting to file - add empty lines for better terminal formatting
   echo ""
-  uv run dotenv run -- report "$@"
+  uv run dotenv run -- python -m lib._report.main "$@"
   echo ""
 fi

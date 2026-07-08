@@ -5,8 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import streamlit as st
+from streamlit.logger import get_logger
 
 from ui.services.session import keys
+from ui.services.user_service import get_privx_user_ids
+
+logger = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -38,6 +42,24 @@ def is_superadmin_username(username: str | None) -> bool:
 def is_protected_group_name(group_name: str | None) -> bool:
     """Return True when the user group name is protected from deletion."""
     return str(group_name or "").strip().lower() == "admin"
+
+
+def is_privx_user() -> bool:
+    """Return True when username matches at least one PrivX principal."""
+    username = str(st.session_state.get(keys.USERNAME) or "").strip()
+    if not username:
+        logger.debug("My Page access check denied reason=missing_username")
+        return False
+
+    privx_user_ids = get_privx_user_ids(username)
+    allowed = bool(privx_user_ids)
+    logger.debug(
+        "My Page access check username=%s resolved_count=%s allowed=%s",
+        username,
+        len(privx_user_ids),
+        allowed,
+    )
+    return allowed
 
 
 def can_edit_profile(user_id: int, *, target_username: str | None = None) -> bool:

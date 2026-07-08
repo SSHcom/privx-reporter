@@ -47,7 +47,7 @@ Examples: "Linux-admin" (matches only "Linux-admin", not "Azure-Linux-admins" or
 [access.subcommands.query.options.user_name]
 flags = ["--user-name"]
 required = false
-help = """Filter by user user name (case-insensitive substring match).
+help = """Filter by user's full name (case-insensitive substring match).
 Note: Cannot be used alone, but must be combined with at least one other filter.
 For filtering by user only, use the --access --hosts report instead."""
 
